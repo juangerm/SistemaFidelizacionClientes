@@ -62,14 +62,15 @@ El archivo `src/main/resources/META-INF/persistence.xml` define la conexión a P
 
 2. Compilar y ejecutar con Openxava:
 
+    ```bash
 	2.1. Descargar openxava de la pagina oficial https://openxava.org/
 	2.2. Instalar el openxava
 	2.3. Buscar la carpeta del repositorio descargado
 	2.4. Antes de ejecutar el projecto tener creado una base de datos sifidb, modificar el archivo persistence.xml segun se indica arriba.
 	2.5. Una vez hecho eso, abrir el proyecto, se tendrá que ver una ventana al costado izquierdo con la siguiente estructura:
-	SistemaFidelizacionClientes/
-  **├── src/main/java**
-    ├── src/main/resources
+        SistemaFidelizacionClientes/
+        ├── src/main/java
+        ├── src/main/resources
     2.6. Click derecho encima de src/main/java --> "Run As.." --> Maven Install
 	2.7. Click derecho encima de src/main/java --> "Run As.." --> Java Application
 	2.8 Se realiza la compilación y ejecución del servicio REST+Frontend.

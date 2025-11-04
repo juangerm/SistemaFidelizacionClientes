@@ -51,17 +51,21 @@ Utiliza **placeholders** para evitar subir credenciales reales:
 	<property name="hibernate.connection.username" value="postgres"/>
 	<property name="hibernate.connection.password" value="12345"/>
 
+---
+
 ## Ejecución local
 
 1. Clona el repositorio:
    ```bash
    git clone https://github.com/juangerm/SistemaFidelizacionClientes.git
    cd sifi-openxava
+---
 
 2. Compilar y ejecutar con Maven:
    ```bash
 	mvn clean package
 	mvn openxava:run
+---
 
 Abre tu navegador en
 http://localhost:8080/sifi

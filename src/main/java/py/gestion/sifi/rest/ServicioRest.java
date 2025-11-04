@@ -1,6 +1,5 @@
 package py.gestion.sifi.rest;
 
-import java.time.*;
 import java.util.*;
 
 import javax.persistence.*;
@@ -11,760 +10,600 @@ import org.openxava.jpa.*;
 
 import py.gestion.sifi.modelo.*;
 
-
-
-@Path("/servicio")  // URL base del servicio
+@Path("/api")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class ServicioRest {
 
 	/*
-	 * Metodos get, post, put y delete para la entidad cliente
+	 * =========================== HELPERS (DTO mappers) ===========================
 	 */
+	private static ClienteDTO toDTO(Cliente c) {
+		ClienteDTO dto = new ClienteDTO();
+		dto.setId(c.getId());
+		dto.setNombre(c.getNombre());
+		dto.setApellido(c.getApellido());
+		dto.setNumeroDocumento(c.getNumeroDocumento());
+		dto.setFechaNacimiento(c.getFechaNacimiento() != null ? c.getFechaNacimiento().toString() : null);
+		dto.setCelular(c.getCelular());
+		dto.setEmail(c.getEmail());
+		dto.setCodNacionalidad(c.getNacionalidad() != null ? c.getNacionalidad().getCodNacionalidad() : null);
+		dto.setCodTipoDocumento(c.getTipoDocumento() != null ? c.getTipoDocumento().getCodTipoDocumento() : null);
+		return dto;
+	}
 
+	private static BolsaPuntoDTO toDTO(BolsaPunto b) {
+		BolsaPuntoDTO dto = new BolsaPuntoDTO();
+		dto.setId(b.getId());
+		dto.setIdCliente(b.getCliente() != null ? b.getCliente().getId() : null);
+		dto.setIdVencimientoPunto(b.getVencimientoPunto() != null ? b.getVencimientoPunto().getId() : null);
+		dto.setPuntajeAsignado(b.getPuntajeAsignado());
+		dto.setPuntajeUtilizado(b.getPuntajeUtilizado());
+		dto.setSaldoPunto(b.getSaldoPunto());
+		dto.setMontoOperacion(b.getMontoOperacion());
+		dto.setNombreCliente(
+				b.getCliente() != null ? b.getCliente().getNombre() + " " + b.getCliente().getApellido() : null);
+		dto.setVencimientoPunto(
+				b.getVencimientoPunto() != null ? b.getVencimientoPunto().getFechaFin().toString() : null);
+		return dto;
+	}
+
+	/*
+	 * =========================== CLIENTES ===========================
+	 */
 	@GET
-	@Path("/listarClientes")
+	@Path("/clientes")
 	public List<ClienteDTO> listarClientes() {
-	    EntityManager em = XPersistence.getManager();
-	    List<Cliente> clientes = em.createQuery("SELECT c FROM Cliente c", Cliente.class).getResultList();
-
-	    List<ClienteDTO> resultado = new ArrayList<>();
-
-	    for (Cliente c : clientes) {
-	        ClienteDTO dto = new ClienteDTO();
-	        dto.setId(c.getId());
-	        dto.setNombre(c.getNombre());
-	        dto.setApellido(c.getApellido());
-	        dto.setNumeroDocumento(c.getNumeroDocumento());
-	        dto.setFechaNacimiento(c.getFechaNacimiento() != null ? c.getFechaNacimiento().toString() : null);
-	        dto.setCelular(c.getCelular());
-	        dto.setEmail(c.getEmail());
-	        dto.setCodNacionalidad(c.getNacionalidad() != null ? c.getNacionalidad().getCodNacionalidad() : null);
-	        dto.setCodTipoDocumento(c.getTipoDocumento() != null ? c.getTipoDocumento().getCodTipoDocumento() : null);
-	        resultado.add(dto);
-	    }
-	    return resultado;
+		EntityManager em = XPersistence.getManager();
+		List<Cliente> list = em.createQuery("select c from Cliente c", Cliente.class).getResultList();
+		List<ClienteDTO> out = new ArrayList<>();
+		for (Cliente c : list)
+			out.add(toDTO(c));
+		return out;
 	}
 
-	
 	@GET
-	@Path("/cliente/{id}")
-	public ClienteDTO obtener(@PathParam("id") Integer id) {
-	    EntityManager em = XPersistence.getManager();
-	    Cliente cliente = em.find(Cliente.class, id);
-	    if (cliente == null) {
-	        throw new WebApplicationException("Cliente no encontrado", 404);
-	    }
-	    ClienteDTO dto = new ClienteDTO();	        
-        dto.setId(cliente.getId());
-        dto.setNombre(cliente.getNombre());
-        dto.setApellido(cliente.getApellido());
-        dto.setNumeroDocumento(cliente.getNumeroDocumento());
-        dto.setFechaNacimiento(cliente.getFechaNacimiento() != null ? cliente.getFechaNacimiento().toString() : null);
-        dto.setCelular(cliente.getCelular());
-        dto.setEmail(cliente.getEmail());
-        dto.setCodNacionalidad(cliente.getNacionalidad() != null ? cliente.getNacionalidad().getCodNacionalidad() : null);
-        dto.setCodTipoDocumento(cliente.getTipoDocumento() != null ? cliente.getTipoDocumento().getCodTipoDocumento() : null);
-        return dto;
+	@Path("/clientes/{id}")
+	public ClienteDTO obtenerCliente(@PathParam("id") Integer id) {
+		EntityManager em = XPersistence.getManager();
+		Cliente c = em.find(Cliente.class, id);
+		if (c == null)
+			throw new WebApplicationException("Cliente no encontrado", 404);
+		return toDTO(c);
 	}
-	
+
 	@POST
-	@Path("/grabarCliente")
-	public Cliente grabar(Cliente persona) {
+	@Path("/clientes")
+	public Cliente crearCliente(Cliente body) {
 		try {
 			EntityManager em = XPersistence.getManager();
-			
-			if (persona.getId() == null) {
-				em.persist(persona);
-			} else {
-				em.merge(persona);
-			}
-			
-			System.out.println("Grabado correctamente: ID=" + persona.getId() + ", Nombre=" + persona.getNombre());
-			return persona;
-			
+			em.persist(body);
+			return body;
 		} catch (Exception e) {
 			XPersistence.rollback();
-			System.out.println("Error al grabar PersonaFisica: " + e.getMessage());
-			throw new RuntimeException("Error al grabar PersonaFisica: " + e.getMessage(), e);
+			throw new WebApplicationException("Error al crear cliente: " + e.getMessage(), 500);
 		}
 	}
-	
+
 	@PUT
-	@Path("/actualizarCliente/{id}")
-	public ClienteDTO actualizar(@PathParam("id") Integer id, Cliente clienteActualizado) {
-	    EntityManager em = XPersistence.getManager();
-	    try {
-	        Cliente clienteExistente = em.find(Cliente.class, id);
-	        if (clienteExistente == null) {
-	            throw new WebApplicationException("Cliente no encontrado con ID " + id, 404);
-	        }
+	@Path("/clientes/{id}")
+	public ClienteDTO actualizarCliente(@PathParam("id") Integer id, Cliente in) {
+		EntityManager em = XPersistence.getManager();
+		try {
+			Cliente c = em.find(Cliente.class, id);
+			if (c == null)
+				throw new WebApplicationException("Cliente no encontrado con ID " + id, 404);
 
-	        clienteExistente.setNombre(clienteActualizado.getNombre());
-	        clienteExistente.setApellido(clienteActualizado.getApellido());
-	        clienteExistente.setNumeroDocumento(clienteActualizado.getNumeroDocumento());
-	        clienteExistente.setFechaNacimiento(clienteActualizado.getFechaNacimiento());
-	        clienteExistente.setCelular(clienteActualizado.getCelular());
-	        clienteExistente.setEmail(clienteActualizado.getEmail());
-
-	        if (clienteActualizado.getNacionalidad() != null) {
-	            Nacionalidad nacionalidad = em.find(Nacionalidad.class, clienteActualizado.getNacionalidad().getCodNacionalidad());
-	            clienteExistente.setNacionalidad(nacionalidad);
-	        }
-
-	        if (clienteActualizado.getTipoDocumento() != null) {
-	            TipoDocumento tipoDocumento = em.find(TipoDocumento.class, clienteActualizado.getTipoDocumento().getCodTipoDocumento());
-	            clienteExistente.setTipoDocumento(tipoDocumento);
-	        }
-
-	        em.merge(clienteExistente);
-
-	        // Convertimos el cliente a DTO antes de devolverlo
-	        ClienteDTO dto = new ClienteDTO();	        
-	        dto.setId(clienteExistente.getId());
-	        dto.setNombre(clienteExistente.getNombre());
-	        dto.setApellido(clienteExistente.getApellido());
-	        dto.setNumeroDocumento(clienteExistente.getNumeroDocumento());
-	        dto.setFechaNacimiento(clienteExistente.getFechaNacimiento() != null ? clienteExistente.getFechaNacimiento().toString() : null);
-	        dto.setCelular(clienteExistente.getCelular());
-	        dto.setEmail(clienteExistente.getEmail());
-	        dto.setCodNacionalidad(clienteExistente.getNacionalidad() != null ? clienteExistente.getNacionalidad().getCodNacionalidad() : null);
-	        dto.setCodTipoDocumento(clienteExistente.getTipoDocumento() != null ? clienteExistente.getTipoDocumento().getCodTipoDocumento() : null);
-	        return dto;
-	    } catch (Exception e) {
-	        XPersistence.rollback();
-	        throw new RuntimeException("Error al actualizar cliente: " + e.getMessage(), e);
-	    }
+			c.setNombre(in.getNombre());
+			c.setApellido(in.getApellido());
+			c.setNumeroDocumento(in.getNumeroDocumento());
+			c.setFechaNacimiento(in.getFechaNacimiento());
+			c.setCelular(in.getCelular());
+			c.setEmail(in.getEmail());
+			if (in.getNacionalidad() != null)
+				c.setNacionalidad(em.find(Nacionalidad.class, in.getNacionalidad().getCodNacionalidad()));
+			if (in.getTipoDocumento() != null)
+				c.setTipoDocumento(em.find(TipoDocumento.class, in.getTipoDocumento().getCodTipoDocumento()));
+			em.merge(c);
+			return toDTO(c);
+		} catch (Exception e) {
+			XPersistence.rollback();
+			throw new WebApplicationException("Error al actualizar cliente: " + e.getMessage(), 500);
+		}
 	}
 
-
 	@DELETE
-	@Path("/eliminarCliente/{id}")
+	@Path("/clientes/{id}")
 	public Response eliminarCliente(@PathParam("id") Integer id) {
-	    EntityManager em = XPersistence.getManager();
-	    try {
-	        Cliente clienteExistente = em.find(Cliente.class, id);
-	        if (clienteExistente == null) {
-	            return Response.status(Response.Status.NOT_FOUND)
-	                           .entity("Cliente no encontrado con ID " + id)
-	                           .build();
-	        }
-
-	        em.remove(clienteExistente);
-
-	        System.out.println("Cliente eliminado: ID=" + id);
-	        return Response.ok("Cliente eliminado correctamente").build();
-	    } catch (Exception e) {
-	        XPersistence.rollback();
-	        System.out.println("Error al eliminar cliente: " + e.getMessage());
-	        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-	                       .entity("Error al eliminar cliente: " + e.getMessage())
-	                       .build();
-	    }
-	}
-	
-	/*
-	 *Metodos get, post, put y delete para la entidad concepto punto
-	 */
-	
-	@GET
-	@Path("/listarConceptoPunto")
-	public List<ConceptoPunto> listarConceptoPunto() {
-	    EntityManager em = XPersistence.getManager();
-	    return em.createQuery("SELECT c FROM ConceptoPunto c", ConceptoPunto.class).getResultList();
-	}
-	
-	@POST
-	@Path("/grabarConceptoPunto")
-	public ConceptoPunto grabar(ConceptoPunto conceptoPunto) {
+		EntityManager em = XPersistence.getManager();
 		try {
-			EntityManager em = XPersistence.getManager();
-			
-			if (conceptoPunto.getId() == null) {
-				em.persist(conceptoPunto);
-			} else {
-				em.merge(conceptoPunto);
-			}
-			
-			System.out.println("Grabado correctamente: ID=" + conceptoPunto.getId() + ", Nombre=" + conceptoPunto.getConcepto());
-			return conceptoPunto;
-			
+			Cliente c = em.find(Cliente.class, id);
+			if (c == null)
+				return Response.status(404).entity("Cliente no encontrado").build();
+			em.remove(c);
+			return Response.ok().entity("Eliminado").build();
 		} catch (Exception e) {
 			XPersistence.rollback();
-			System.out.println("Error al grabar: " + e.getMessage());
-			throw new RuntimeException("Error al grabar: " + e.getMessage(), e);
+			return Response.serverError().entity("Error al eliminar: " + e.getMessage()).build();
 		}
 	}
-	
+
+	/*
+	 * =========================== CONCEPTOS ===========================
+	 */
+	@GET
+	@Path("/conceptos")
+	public List<ConceptoPunto> listarConceptos() {
+		return XPersistence.getManager().createQuery("from ConceptoPunto", ConceptoPunto.class).getResultList();
+	}
+
+	@POST
+	@Path("/conceptos")
+	public ConceptoPunto crearConcepto(ConceptoPunto c) {
+		try {
+			XPersistence.getManager().persist(c);
+			return c;
+		} catch (Exception e) {
+			XPersistence.rollback();
+			throw new WebApplicationException("Error al crear concepto: " + e.getMessage(), 500);
+		}
+	}
+
 	@PUT
-	@Path("/actualizarConceptoPunto/{id}")
-	public ConceptoPunto actualizar(@PathParam("id") Integer id, ConceptoPunto entidadActualizada) {
-	    EntityManager em = XPersistence.getManager();
-	    try {
-	    	ConceptoPunto entidad = em.find(ConceptoPunto.class, id);
-	        if (entidadActualizada == null) {
-	            throw new WebApplicationException("No encontrado con ID " + id, 404);
-	        }
-
-	        // Actualizamos los campos
-	        entidad.setConcepto(entidadActualizada.getConcepto());
-	        entidad.setPuntoRequerido(entidadActualizada.getPuntoRequerido());
-
-	        em.merge(entidad);
-
-	        System.out.println("Actualizado: ID=" + entidadActualizada.getId() + ", Nombre=" + entidadActualizada.getConcepto());
-	        return entidadActualizada;
-	    } catch (Exception e) {
-	        XPersistence.rollback();
-	        System.out.println("Error al actualizar: " + e.getMessage());
-	        throw new RuntimeException("Error al actualizar: " + e.getMessage(), e);
-	    }
+	@Path("/conceptos/{id}")
+	public ConceptoPunto actualizarConcepto(@PathParam("id") Integer id, ConceptoPunto in) {
+		EntityManager em = XPersistence.getManager();
+		try {
+			ConceptoPunto c = em.find(ConceptoPunto.class, id);
+			if (c == null)
+				throw new WebApplicationException("No encontrado", 404);
+			c.setConcepto(in.getConcepto());
+			c.setPuntoRequerido(in.getPuntoRequerido());
+			return em.merge(c);
+		} catch (Exception e) {
+			XPersistence.rollback();
+			throw new WebApplicationException("Error al actualizar concepto: " + e.getMessage(), 500);
+		}
 	}
 
 	@DELETE
-	@Path("/eliminarConceptoPunto/{id}")
-	public Response eliminarConceptoPunto(@PathParam("id") Integer id) {
-	    EntityManager em = XPersistence.getManager();
-	    try {
-	    	ConceptoPunto entidad = em.find(ConceptoPunto.class, id);
-	        if (entidad == null) {
-	            return Response.status(Response.Status.NOT_FOUND)
-	                           .entity("No encontrado con ID " + id)
-	                           .build();
-	        }
-
-	        em.remove(entidad);
-
-	        System.out.println("Eliminado: ID=" + id);
-	        return Response.ok("Eliminado correctamente").build();
-	    } catch (Exception e) {
-	        XPersistence.rollback();
-	        System.out.println("Error al eliminar: " + e.getMessage());
-	        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-	                       .entity("Error al eliminar: " + e.getMessage())
-	                       .build();
-	    }
-	}
-	
-	/*
-	 *Metodos get, post, put y delete para la entidad regla asignacion punto
-	 */
-	@GET
-	@Path("/listarRegla")
-	public List<ReglaAsignacionPunto> listarReglaAsignacionPunto() {
-	    EntityManager em = XPersistence.getManager();
-	    return em.createQuery("SELECT c FROM ReglaAsignacionPunto c", ReglaAsignacionPunto.class).getResultList();
-	}
-	
-	@POST
-	@Path("/grabarRegla")
-	public ReglaAsignacionPunto grabar(ReglaAsignacionPunto reglaAsignacionPunto) {
+	@Path("/conceptos/{id}")
+	public Response eliminarConcepto(@PathParam("id") Integer id) {
+		EntityManager em = XPersistence.getManager();
 		try {
-			EntityManager em = XPersistence.getManager();
-			
-			if (reglaAsignacionPunto.getId() == null) {
-				em.persist(reglaAsignacionPunto);
-			} else {
-				em.merge(reglaAsignacionPunto);
-			}
-			
-			System.out.println("Grabado correctamente: ID=" + reglaAsignacionPunto.getId() + ", Nombre=" + reglaAsignacionPunto.getPuntoEquivalente());
-			return reglaAsignacionPunto;
-			
+			ConceptoPunto c = em.find(ConceptoPunto.class, id);
+			if (c == null)
+				return Response.status(404).entity("No encontrado").build();
+			em.remove(c);
+			return Response.ok("Eliminado").build();
 		} catch (Exception e) {
 			XPersistence.rollback();
-			System.out.println("Error al grabar: " + e.getMessage());
-			throw new RuntimeException("Error al grabar: " + e.getMessage(), e);
+			return Response.serverError().entity("Error: " + e.getMessage()).build();
 		}
 	}
-	
+
+	/*
+	 * =========================== REGLAS ===========================
+	 */
+	@GET
+	@Path("/reglas")
+	public List<ReglaAsignacionPunto> listarReglas() {
+		return XPersistence.getManager().createQuery("from ReglaAsignacionPunto", ReglaAsignacionPunto.class)
+				.getResultList();
+	}
+
+	@POST
+	@Path("/reglas")
+	public ReglaAsignacionPunto crearRegla(ReglaAsignacionPunto r) {
+		try {
+			XPersistence.getManager().persist(r);
+			return r;
+		} catch (Exception e) {
+			XPersistence.rollback();
+			throw new WebApplicationException("Error al crear regla: " + e.getMessage(), 500);
+		}
+	}
+
 	@PUT
-	@Path("/actualizarRegla/{id}")
-	public ReglaAsignacionPunto actualizar(@PathParam("id") Integer id, ReglaAsignacionPunto entidadActualizada) {
-	    EntityManager em = XPersistence.getManager();
-	    try {
-	    	ReglaAsignacionPunto entidad = em.find(ReglaAsignacionPunto.class, id);
-	        if (entidadActualizada == null) {
-	            throw new WebApplicationException("No encontrado con ID " + id, 404);
-	        }
-
-	        // Actualizamos los campos
-	        entidad.setLimiteInferior(entidadActualizada.getLimiteInferior());
-	        entidad.setLimiteSuperior(entidadActualizada.getLimiteSuperior());
-	        entidad.setPuntoEquivalente(entidadActualizada.getPuntoEquivalente());
-	        entidad.setMontoEquivalente(entidadActualizada.getMontoEquivalente());
-
-	        em.merge(entidad);
-
-	        System.out.println("Actualizado: ID=" + entidadActualizada.getId() + ", Nombre=" + entidadActualizada.getMontoEquivalente());
-	        return entidadActualizada;
-	    } catch (Exception e) {
-	        XPersistence.rollback();
-	        System.out.println("Error al actualizar: " + e.getMessage());
-	        throw new RuntimeException("Error al actualizar: " + e.getMessage(), e);
-	    }
+	@Path("/reglas/{id}")
+	public ReglaAsignacionPunto actualizarRegla(@PathParam("id") Integer id, ReglaAsignacionPunto in) {
+		EntityManager em = XPersistence.getManager();
+		try {
+			ReglaAsignacionPunto r = em.find(ReglaAsignacionPunto.class, id);
+			if (r == null)
+				throw new WebApplicationException("No encontrado", 404);
+			r.setLimiteInferior(in.getLimiteInferior());
+			r.setLimiteSuperior(in.getLimiteSuperior());
+			r.setPuntoEquivalente(in.getPuntoEquivalente());
+			r.setMontoEquivalente(in.getMontoEquivalente());
+			return em.merge(r);
+		} catch (Exception e) {
+			XPersistence.rollback();
+			throw new WebApplicationException("Error al actualizar regla: " + e.getMessage(), 500);
+		}
 	}
 
 	@DELETE
-	@Path("/eliminarRegla/{id}")
+	@Path("/reglas/{id}")
 	public Response eliminarRegla(@PathParam("id") Integer id) {
-	    EntityManager em = XPersistence.getManager();
-	    try {
-	    	ReglaAsignacionPunto entidad = em.find(ReglaAsignacionPunto.class, id);
-	        if (entidad == null) {
-	            return Response.status(Response.Status.NOT_FOUND)
-	                           .entity("No encontrado con ID " + id)
-	                           .build();
-	        }
-
-	        em.remove(entidad);
-
-	        System.out.println("Eliminado: ID=" + id);
-	        return Response.ok("Eliminado correctamente").build();
-	    } catch (Exception e) {
-	        XPersistence.rollback();
-	        System.out.println("Error al eliminar: " + e.getMessage());
-	        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-	                       .entity("Error al eliminar: " + e.getMessage())
-	                       .build();
-	    }
+		EntityManager em = XPersistence.getManager();
+		try {
+			ReglaAsignacionPunto r = em.find(ReglaAsignacionPunto.class, id);
+			if (r == null)
+				return Response.status(404).entity("No encontrado").build();
+			em.remove(r);
+			return Response.ok("Eliminado").build();
+		} catch (Exception e) {
+			XPersistence.rollback();
+			return Response.serverError().entity("Error: " + e.getMessage()).build();
+		}
 	}
-	
+
 	/*
-	 *Metodos get, post, put y delete para la entidad vencimiento punto
+	 * =========================== VENCIMIENTOS ===========================
 	 */
 	@GET
-	@Path("/listarVencimientos")
+	@Path("/vencimientos")
 	public List<VencimientoPunto> listarVencimientos() {
-	    EntityManager em = XPersistence.getManager();
-	    return em.createQuery("SELECT c FROM VencimientoPunto c", VencimientoPunto.class).getResultList();
+		return XPersistence.getManager().createQuery("from VencimientoPunto", VencimientoPunto.class).getResultList();
 	}
-	
+
 	@POST
-	@Path("/grabarVencimiento")
-	public VencimientoPunto grabar(VencimientoPunto vencimientoPunto) {
+	@Path("/vencimientos")
+	public VencimientoPunto crearVencimiento(VencimientoPunto v) {
 		try {
-			EntityManager em = XPersistence.getManager();
-			
-			if (vencimientoPunto.getId() == null) {
-				em.persist(vencimientoPunto);
-			} else {
-				em.merge(vencimientoPunto);
-			}
-			
-			System.out.println("Grabado correctamente: ID=" + vencimientoPunto.getId() + ", Nombre=" + vencimientoPunto.getFechaInicio());
-			return vencimientoPunto;
-			
+			XPersistence.getManager().persist(v);
+			return v;
 		} catch (Exception e) {
 			XPersistence.rollback();
-			System.out.println("Error al grabar: " + e.getMessage());
-			throw new RuntimeException("Error al grabar: " + e.getMessage(), e);
+			throw new WebApplicationException("Error al crear vencimiento: " + e.getMessage(), 500);
 		}
 	}
-	
+
 	@PUT
-	@Path("/actualizarVencimiento/{id}")
-	public VencimientoPunto actualizar(@PathParam("id") Integer id, VencimientoPunto entidadActualizada) {
-	    EntityManager em = XPersistence.getManager();
-	    try {
-	    	VencimientoPunto entidad = em.find(VencimientoPunto.class, id);
-	        if (entidadActualizada == null) {
-	            throw new WebApplicationException("No encontrado con ID " + id, 404);
-	        }
-
-	        // Actualizamos los campos
-	        entidad.setFechaInicio(entidadActualizada.getFechaInicio());
-	        entidad.setDiasValidez(entidadActualizada.getDiasValidez());
-	        entidad.setFechaFin(entidadActualizada.getFechaFin());
-
-	        em.merge(entidad);
-
-	        System.out.println("Actualizado: ID=" + entidadActualizada.getId() + ", Nombre=" + entidadActualizada.getFechaFin());
-	        return entidadActualizada;
-	    } catch (Exception e) {
-	        XPersistence.rollback();
-	        System.out.println("Error al actualizar: " + e.getMessage());
-	        throw new RuntimeException("Error al actualizar: " + e.getMessage(), e);
-	    }
+	@Path("/vencimientos/{id}")
+	public VencimientoPunto actualizarVencimiento(@PathParam("id") Integer id, VencimientoPunto in) {
+		EntityManager em = XPersistence.getManager();
+		try {
+			VencimientoPunto v = em.find(VencimientoPunto.class, id);
+			if (v == null)
+				throw new WebApplicationException("No encontrado", 404);
+			v.setDiasValidez(in.getDiasValidez());
+			v.setFechaInicio(in.getFechaInicio());
+			v.setFechaFin(in.getFechaFin());
+			return em.merge(v);
+		} catch (Exception e) {
+			XPersistence.rollback();
+			throw new WebApplicationException("Error al actualizar vencimiento: " + e.getMessage(), 500);
+		}
 	}
 
 	@DELETE
-	@Path("/eliminarVencimiento/{id}")
+	@Path("/vencimientos/{id}")
 	public Response eliminarVencimiento(@PathParam("id") Integer id) {
-	    EntityManager em = XPersistence.getManager();
-	    try {
-	    	VencimientoPunto entidad = em.find(VencimientoPunto.class, id);
-	        if (entidad == null) {
-	            return Response.status(Response.Status.NOT_FOUND)
-	                           .entity("No encontrado con ID " + id)
-	                           .build();
-	        }
-
-	        em.remove(entidad);
-
-	        System.out.println("Eliminado: ID=" + id);
-	        return Response.ok("Eliminado correctamente").build();
-	    } catch (Exception e) {
-	        XPersistence.rollback();
-	        System.out.println("Error al eliminar: " + e.getMessage());
-	        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-	                       .entity("Error al eliminar: " + e.getMessage())
-	                       .build();
-	    }
-	}
-	
-	/*
-	 *Metodos get, post, put y delete para la entidad bolsa punto
-	 */
-	@GET
-	@Path("/listarBolsaPunto")
-	public List<BolsaPuntoDTO> listarBolsaPunto() {
-	    EntityManager em = XPersistence.getManager();
-	    List<BolsaPunto> bolsaPunto = em.createQuery("SELECT c FROM BolsaPunto c", BolsaPunto.class).getResultList();
-
-	    List<BolsaPuntoDTO> resultado = new ArrayList<>();
-
-	    for (BolsaPunto c : bolsaPunto) {
-	    	BolsaPuntoDTO dto = new BolsaPuntoDTO();
-	        dto.setId(c.getId());
-		    dto.setIdCliente(c.getCliente() != null ? c.getCliente().getId() : null);
-		    dto.setIdVencimientoPunto(c.getVencimientoPunto() != null ? c.getVencimientoPunto().getId() : null);
-		    dto.setPuntajeAsignado(c.getPuntajeAsignado());
-		    dto.setPuntajeUtilizado(c.getPuntajeUtilizado());
-		    dto.setSaldoPunto(c.getSaldoPunto());
-		    dto.setMontoOperacion(c.getMontoOperacion());
-
-		    // Campos opcionales de descripción
-		    dto.setNombreCliente(c.getCliente() != null ? c.getCliente().getNombre() + " " + c.getCliente().getApellido() : null);
-		    dto.setVencimientoPunto(c.getVencimientoPunto() != null ? c.getVencimientoPunto().getFechaFin().toString() : null);
-	        resultado.add(dto);
-	    }
-	    return resultado;
-	}
-	
-	@GET
-	@Path("/bolsaPunto/{id}")
-	public BolsaPuntoDTO obtenerBolsaPunto(@PathParam("id") Integer id) {
-	    EntityManager em = XPersistence.getManager();
-	    BolsaPunto entidad = em.find(BolsaPunto.class, id);
-
-	    if (entidad == null) {
-	        throw new WebApplicationException("BolsaPunto no encontrada con ID " + id, 404);
-	    }
-
-	    BolsaPuntoDTO dto = new BolsaPuntoDTO();
-	    dto.setId(entidad.getId());
-	    dto.setIdCliente(entidad.getCliente() != null ? entidad.getCliente().getId() : null);
-	    dto.setIdVencimientoPunto(entidad.getVencimientoPunto() != null ? entidad.getVencimientoPunto().getId() : null);
-	    dto.setPuntajeAsignado(entidad.getPuntajeAsignado());
-	    dto.setPuntajeUtilizado(entidad.getPuntajeUtilizado());
-	    dto.setSaldoPunto(entidad.getSaldoPunto());
-	    dto.setMontoOperacion(entidad.getMontoOperacion());
-
-	    // Campos opcionales de descripción
-	    dto.setNombreCliente(entidad.getCliente() != null ? entidad.getCliente().getNombre() + " " + entidad.getCliente().getApellido() : null);
-	    dto.setVencimientoPunto(entidad.getVencimientoPunto() != null ? entidad.getVencimientoPunto().getFechaFin().toString() : null);
-
-	    return dto;
-	}
-	
-	@POST
-	@Path("/grabarBolsaPunto")
-	public BolsaPunto grabar(BolsaPunto bolsaPunto) {
+		EntityManager em = XPersistence.getManager();
 		try {
-			EntityManager em = XPersistence.getManager();
-			
-			if (bolsaPunto.getId() == null) {
-				em.persist(bolsaPunto);
-			} else {
-				em.merge(bolsaPunto);
-			}
-			
-			System.out.println("Grabado correctamente: ID=" + bolsaPunto.getId() + ", Nombre=" + bolsaPunto.getCliente().getNombre());
-			return bolsaPunto;
-			
+			VencimientoPunto v = em.find(VencimientoPunto.class, id);
+			if (v == null)
+				return Response.status(404).entity("No encontrado").build();
+			em.remove(v);
+			return Response.ok("Eliminado").build();
 		} catch (Exception e) {
 			XPersistence.rollback();
-			System.out.println("Error al grabar: " + e.getMessage());
-			throw new RuntimeException("Error al grabar: " + e.getMessage(), e);
+			return Response.serverError().entity("Error: " + e.getMessage()).build();
 		}
 	}
-	
-	@PUT
-	@Path("/actualizarBolsaPunto/{id}")
-	public BolsaPuntoDTO actualizar(@PathParam("id") Integer id, BolsaPuntoDTO actualizado) {
-	    EntityManager em = XPersistence.getManager();
-	    try {
-	    	 BolsaPunto entidad = em.find(BolsaPunto.class, id);
-	        if (entidad == null) {
-	            throw new WebApplicationException("Cliente no encontrado con ID " + id, 404);
-	        }
 
-	        entidad.setPuntajeAsignado(actualizado.getPuntajeAsignado());
-	        entidad.setPuntajeUtilizado(actualizado.getPuntajeUtilizado());
-	        entidad.setSaldoPunto(actualizado.getSaldoPunto());
-	        entidad.setMontoOperacion(actualizado.getMontoOperacion());
-	        if (actualizado.getIdCliente() != null) {
-	            Cliente cliente = em.find(Cliente.class, actualizado.getIdCliente());
-	            entidad.setCliente(cliente);
-	        }
-	        if (actualizado.getIdVencimientoPunto() != null) {
-	            VencimientoPunto vp = em.find(VencimientoPunto.class, actualizado.getIdVencimientoPunto());
-	            entidad.setVencimientoPunto(vp);
-	        }
-
-	        em.merge(entidad);
-
-	        // Convertimos el bolsa punto a DTO antes de devolverlo
-	        BolsaPuntoDTO dto = new BolsaPuntoDTO();       
-	        dto.setId(entidad.getId());
-	        dto.setIdCliente(entidad.getCliente() != null ? entidad.getCliente().getId() : null);
-	        dto.setIdVencimientoPunto(entidad.getVencimientoPunto() != null ? entidad.getVencimientoPunto().getId() : null);
-	        dto.setPuntajeAsignado(entidad.getPuntajeAsignado());
-	        dto.setPuntajeUtilizado(entidad.getPuntajeUtilizado());
-	        dto.setSaldoPunto(entidad.getSaldoPunto());
-	        dto.setMontoOperacion(entidad.getMontoOperacion());
-	        return dto;
-	    } catch (Exception e) {
-	        XPersistence.rollback();
-	        throw new RuntimeException("Error al actualizar: " + e.getMessage(), e);
-	    }
-	}
-	
-	@DELETE
-	@Path("/eliminarBolsaPunto/{id}")
-	public Response eliminarBolsaPunto(@PathParam("id") Integer id) {
-	    EntityManager em = XPersistence.getManager();
-	    try {
-	    	BolsaPunto entidad = em.find(BolsaPunto.class, id);
-	        if (entidad == null) {
-	            return Response.status(Response.Status.NOT_FOUND)
-	                           .entity("No encontrado con ID " + id)
-	                           .build();
-	        }
-
-	        em.remove(entidad);
-
-	        System.out.println("Eliminado: ID=" + id);
-	        return Response.ok("Eliminado correctamente").build();
-	    } catch (Exception e) {
-	        XPersistence.rollback();
-	        System.out.println("Error al eliminar: " + e.getMessage());
-	        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-	                       .entity("Error al eliminar: " + e.getMessage())
-	                       .build();
-	    }
-	}
-	
 	/*
-	 *Metodos get, post, put y delete para la entidad uso punto
+	 * =========================== BOLSAS ===========================
 	 */
 	@GET
-	@Path("/listarUsoPunto")
-	public List<UsoPuntoCabeceraDTO> listarUsoPuntoCabecera() {
-	    EntityManager em = XPersistence.getManager();
-	    List<UsoPuntoCabecera> usoPuntoCabecera = em.createQuery("SELECT u FROM UsoPuntoCabecera u", UsoPuntoCabecera.class).getResultList();
-
-	    List<UsoPuntoCabeceraDTO> resultado = new ArrayList<>();
-
-	    for (UsoPuntoCabecera c : usoPuntoCabecera) {
-	        UsoPuntoCabeceraDTO dto = new UsoPuntoCabeceraDTO();
-	        dto.setId(c.getId());
-	        dto.setPuntajeUtilizado(c.getPuntajeUtilizado());
-	        dto.setFecha(c.getFecha());
-
-	        if (c.getCliente() != null) {
-	            dto.setIdCliente(c.getCliente().getId());
-	            dto.setNombreCliente(c.getCliente().getNombre() + " " + c.getCliente().getApellido());
-	        }
-
-	        if (c.getConceptoPunto() != null) {
-	            dto.setIdConceptoPunto(c.getConceptoPunto().getId());
-	            dto.setConcepto(c.getConceptoPunto().getConcepto());
-	        }
-
-	        // Convertir los detalles
-	        List<UsoPuntoDetalleDTO> detallesDTO = new ArrayList<>();
-	        if (c.getDetalle() != null && !c.getDetalle().isEmpty()) {
-	            for (UsoPuntoDetalle det : c.getDetalle()) {
-	                UsoPuntoDetalleDTO detDTO = new UsoPuntoDetalleDTO();
-	                detDTO.setId(det.getId());
-	                if (det.getBolsaPunto() != null) {
-	                    detDTO.setFechaFin(det.getBolsaPunto().getVencimientoPunto() != null
-	                        ? det.getBolsaPunto().getVencimientoPunto().getFechaFin()
-	                        : null);
-	                    detDTO.setSaldoPunto(det.getBolsaPunto().getSaldoPunto());
-	                }
-	                detallesDTO.add(detDTO);
-	            }
-	        }
-	        dto.setDetalles(detallesDTO);
-
-	        resultado.add(dto);
-	    }
-
-	    return resultado;
+	@Path("/bolsas")
+	public List<BolsaPuntoDTO> listarBolsas() {
+		EntityManager em = XPersistence.getManager();
+		List<BolsaPunto> list = em.createQuery("from BolsaPunto", BolsaPunto.class).getResultList();
+		List<BolsaPuntoDTO> out = new ArrayList<>();
+		for (BolsaPunto b : list)
+			out.add(toDTO(b));
+		return out;
 	}
 
-	@POST
-	@Path("/grabarUsoPuntoCabecera")
-	public Response grabarUsoPuntoCabecera(UsoPuntoCabeceraDTO dto) {
-	    EntityManager em = XPersistence.getManager();
-	    try {
-	        // Crear la entidad principal
-	        UsoPuntoCabecera entidad = new UsoPuntoCabecera();
-	        entidad.setPuntajeUtilizado(dto.getPuntajeUtilizado());
-	        entidad.setFecha(dto.getFecha() != null ? dto.getFecha() : LocalDate.now());
-
-	        // Relación con cliente
-	        if (dto.getIdCliente() != null) {
-	            Cliente cliente = em.find(Cliente.class, dto.getIdCliente());
-	            if (cliente != null) entidad.setCliente(cliente);
-	        }
-
-	        // Relación con concepto punto
-	        if (dto.getIdConceptoPunto() != null) {
-	            ConceptoPunto concepto = em.find(ConceptoPunto.class, dto.getIdConceptoPunto());
-	            if (concepto != null) entidad.setConceptoPunto(concepto);
-	        }
-
-	        // Guardar primero la cabecera (para tener ID generado)
-	        em.persist(entidad);
-	        em.flush();
-
-	        // Procesar los detalles (si existen)
-	        if (dto.getDetalles() != null && !dto.getDetalles().isEmpty()) {
-	            for (UsoPuntoDetalleDTO detDTO : dto.getDetalles()) {
-	                UsoPuntoDetalle det = new UsoPuntoDetalle();
-	                det.setUsoPuntoCabecera(entidad); // vincular cabecera
-
-	                // Si se pasa un id de bolsaPunto o hay datos del saldo, cargamos
-	                if (detDTO.getId() != null) {
-	                    BolsaPunto bolsa = em.find(BolsaPunto.class, detDTO.getId());
-	                    if (bolsa != null) det.setBolsaPunto(bolsa);
-	                }
-
-	                em.persist(det);
-	            }
-	        }
-	        XPersistence.commit();
-	        // Devolver la cabecera creada
-	        return Response.status(Response.Status.CREATED).entity(dto).build();
-
-	    } catch (Exception e) {
-	        XPersistence.rollback();
-	        e.printStackTrace();
-	        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-	                .entity("Error al crear: " + e.getMessage())
-	                .build();
-	    }
+	@GET
+	@Path("/bolsas/{id}")
+	public BolsaPuntoDTO obtenerBolsa(@PathParam("id") Integer id) {
+		BolsaPunto b = XPersistence.getManager().find(BolsaPunto.class, id);
+		if (b == null)
+			throw new WebApplicationException("Bolsa no encontrada", 404);
+		return toDTO(b);
 	}
+
+	@POST @Path("/bolsas")
+	public BolsaPuntoDTO crearBolsa(BolsaPunto b) {
+	  try {
+	    EntityManager em = XPersistence.getManager();
+
+	    if (b.getCliente() != null && b.getCliente().getId() != null) {
+	      b.setCliente(em.getReference(Cliente.class, b.getCliente().getId()));
+	    }
+	    if (b.getVencimientoPunto() != null && b.getVencimientoPunto().getId() != null) {
+	      b.setVencimientoPunto(em.getReference(VencimientoPunto.class, b.getVencimientoPunto().getId()));
+	    }
+	    em.persist(b);
+	    em.flush();
+	    em.refresh(b);
+	    BolsaPuntoDTO dto = toDTO(b);
+	    return dto;
+
+	  } catch (Exception e) {
+	    XPersistence.rollback();
+	    throw new WebApplicationException("Error al crear bolsa: " + e.getMessage(), 500);
+	  }
+	}
+
 
 	@PUT
-	@Path("/actualizarUsoPunto/{id}")
-	public Response actualizarUsoPuntoCabecera(@PathParam("id") Integer id, UsoPuntoCabeceraDTO dto) {
-	    EntityManager em = XPersistence.getManager();
-
-	    try {
-	        UsoPuntoCabecera entidad = em.find(UsoPuntoCabecera.class, id);
-	        if (entidad == null) {
-	            return Response.status(Response.Status.NOT_FOUND)
-	                    .entity("UsoPuntoCabecera no encontrada con ID " + id)
-	                    .build();
-	        }
-
-	        // Actualizar los campos simples
-	        entidad.setPuntajeUtilizado(dto.getPuntajeUtilizado());
-	        entidad.setFecha(dto.getFecha() != null ? dto.getFecha() : entidad.getFecha());
-
-	        // Actualizar cliente
-	        if (dto.getIdCliente() != null) {
-	            Cliente cliente = em.find(Cliente.class, dto.getIdCliente());
-	            entidad.setCliente(cliente);
-	        }
-
-	        // Actualizar concepto punto
-	        if (dto.getIdConceptoPunto() != null) {
-	            ConceptoPunto concepto = em.find(ConceptoPunto.class, dto.getIdConceptoPunto());
-	            entidad.setConceptoPunto(concepto);
-	        }
-
-	        // Actualizar detalles si se envían
-	        if (dto.getDetalles() != null && !dto.getDetalles().isEmpty()) {
-	        	for (UsoPuntoDetalle d : new ArrayList<>(entidad.getDetalle())) {
-	                em.remove(d); // elimina físicamente
-	            }
-	            entidad.getDetalle().clear();
-
-	            for (UsoPuntoDetalleDTO detDTO : dto.getDetalles()) {
-	                UsoPuntoDetalle det = new UsoPuntoDetalle();
-	                det.setUsoPuntoCabecera(entidad);
-
-	                if (detDTO.getIdBolsaPunto() != null) {
-	                    BolsaPunto bolsa = em.find(BolsaPunto.class, detDTO.getIdBolsaPunto());
-	                    det.setBolsaPunto(bolsa);
-	                }
-
-	                em.persist(det);
-	            }
-	        }
-
-	        // Guardar los cambios
-	        em.merge(entidad);
-	        XPersistence.commit();
-
-	        return Response.ok(dto).build();
-
-	    } catch (Exception e) {
-	        XPersistence.rollback();
-	        e.printStackTrace();
-	        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-	                .entity("Error al actualizar: " + e.getMessage())
-	                .build();
-	    }
+	@Path("/bolsas/{id}")
+	public BolsaPuntoDTO actualizarBolsa(@PathParam("id") Integer id, BolsaPuntoDTO in) {
+		/* No permitir tocar saldo/puntaje_utilizado directamente por API */
+		EntityManager em = XPersistence.getManager();
+		try {
+			BolsaPunto b = em.find(BolsaPunto.class, id);
+			if (b == null)
+				throw new WebApplicationException("Bolsa no encontrada", 404);
+			b.setMontoOperacion(in.getMontoOperacion());
+			if (in.getIdCliente() != null)
+				b.setCliente(em.find(Cliente.class, in.getIdCliente()));
+			if (in.getIdVencimientoPunto() != null)
+				b.setVencimientoPunto(em.find(VencimientoPunto.class, in.getIdVencimientoPunto()));
+			em.merge(b);
+			return toDTO(b);
+		} catch (Exception e) {
+			XPersistence.rollback();
+			throw new WebApplicationException("Error al actualizar bolsa: " + e.getMessage(), 500);
+		}
 	}
 
 	@DELETE
-	@Path("/eliminarUsoPunto/{id}")
-	public Response eliminarUsoPunto(@PathParam("id") Integer id) {
-	    EntityManager em = XPersistence.getManager();
-
-	    try {
-	    	XPersistence.getManager().joinTransaction();
-
-	        UsoPuntoCabecera entidad = em.find(UsoPuntoCabecera.class, id);
-	        if (entidad == null) {
-	            return Response.status(Response.Status.NOT_FOUND)
-	                    .entity("No encontrada con ID " + id)
-	                    .build();
-	        }
-
-	        // --- Eliminar los detalles asociados ---
-	        if (entidad.getDetalle() != null && !entidad.getDetalle().isEmpty()) {
-	            for (UsoPuntoDetalle detalle : new ArrayList<>(entidad.getDetalle())) {
-	                em.remove(detalle);
-	            }
-	        }
-
-	        // --- Eliminar la cabecera ---
-	        em.remove(entidad);
-
-	        XPersistence.commit();
-
-	        return Response.ok()
-	                .entity("ID " + id + " eliminada correctamente.")
-	                .build();
-
-	    } catch (Exception e) {
-	    	e.printStackTrace();
-	        XPersistence.rollback();
-	        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-	                .entity("Error al eliminar: " + e.getMessage())
-	                .build();
-	    }
+	@Path("/bolsas/{id}")
+	public Response eliminarBolsa(@PathParam("id") Integer id) {
+		EntityManager em = XPersistence.getManager();
+		try {
+			BolsaPunto b = em.find(BolsaPunto.class, id);
+			if (b == null)
+				return Response.status(404).entity("No encontrada").build();
+			em.remove(b);
+			return Response.ok("Eliminada").build();
+		} catch (Exception e) {
+			XPersistence.rollback();
+			return Response.serverError().entity("Error: " + e.getMessage()).build();
+		}
 	}
 
-	
-	
+	@GET
+	@Path("/bolsas/cliente/{idCliente}")
+	public List<BolsaPuntoDTO> listarBolsasPorCliente(@PathParam("idCliente") Integer idCliente,
+			@QueryParam("soloConSaldo") @DefaultValue("false") boolean soloConSaldo,
+			@QueryParam("soloVigentes") @DefaultValue("false") boolean soloVigentes) {
 
+		EntityManager em = XPersistence.getManager();
+
+		StringBuilder sql = new StringBuilder("select b.id, b.idcliente, b.idvencimientopunto, b.puntaje_asignado, "
+				+ "       b.puntaje_utilizado, b.saldo_punto, b.monto_operacion, v.fecha_fin, "
+				+ "       cl.nombre, cl.apellido " + "from bolsapunto b "
+				+ "left join vencimientopunto v on v.id = b.idvencimientopunto "
+				+ "join cliente cl on cl.id = b.idcliente " + "where b.idcliente = :cid ");
+
+		if (soloConSaldo)
+			sql.append("and b.saldo_punto > 0 ");
+		if (soloVigentes)
+			sql.append("and (v.id is null or v.fecha_fin is null or v.fecha_fin >= current_date) ");
+		sql.append("order by b.id");
+
+		@SuppressWarnings("unchecked")
+		List<Object[]> rows = em.createNativeQuery(sql.toString()).setParameter("cid", idCliente).getResultList();
+
+		List<BolsaPuntoDTO> out = new ArrayList<>();
+		for (Object[] r : rows) {
+			BolsaPuntoDTO d = new BolsaPuntoDTO();
+			d.setId((Integer) r[0]);
+			d.setIdCliente((Integer) r[1]);
+			d.setIdVencimientoPunto((Integer) r[2]);
+			d.setPuntajeAsignado((Integer) r[3]);
+			d.setPuntajeUtilizado((Integer) r[4]);
+			d.setSaldoPunto((Integer) r[5]);
+			d.setMontoOperacion((java.math.BigDecimal) r[6]);
+			java.sql.Date f = (java.sql.Date) r[7];
+			d.setVencimientoPunto(f == null ? null : f.toLocalDate().toString());
+			String nombre = (String) r[8];
+			String apellido = (String) r[9];
+			d.setNombreCliente((nombre == null && apellido == null) ? null : (nombre + " " + apellido).trim());
+			out.add(d);
+		}
+		return out;
+	}
+
+	// 2.b) Atajo: solo con saldo y vigentes (friendly)
+	@GET
+	@Path("/bolsas/cliente/{idCliente}/disponibles")
+	public List<BolsaPuntoDTO> listarBolsasDisponiblesPorCliente(@PathParam("idCliente") Integer idCliente) {
+		return listarBolsasPorCliente(idCliente, true, true);
+	}
+
+	/*
+	 * =========================== CANJES (cabecera + detalle)
+	 * ===========================
+	 */
+
+	// LISTAR canjes con DTO
+	@GET
+	@Path("/canjes")
+	public List<UsoPuntoCabeceraDTO> listarCanjes() {
+		EntityManager em = XPersistence.getManager();
+
+		@SuppressWarnings("unchecked")
+		List<Object[]> cabs = em
+				.createNativeQuery("select c.id, c.idcliente, (cl.nombre || ' ' || cl.apellido) as nombre_cliente, "
+						+ "       c.puntaje_utilizado, c.fecha, c.idconceptopunto, cp.concepto "
+						+ "from usopuntocabecera c " + "join cliente cl on cl.id = c.idcliente "
+						+ "join conceptopunto cp on cp.id = c.idconceptopunto " + "order by c.id desc")
+				.getResultList();
+
+		Map<Integer, UsoPuntoCabeceraDTO> mapa = new LinkedHashMap<>();
+		for (Object[] r : cabs) {
+			UsoPuntoCabeceraDTO dto = new UsoPuntoCabeceraDTO();
+			Integer id = (Integer) r[0];
+			dto.setId(id);
+			dto.setIdCliente((Integer) r[1]);
+			dto.setNombreCliente((String) r[2]);
+			dto.setPuntajeUtilizado((Integer) r[3]);
+			dto.setFecha(((java.sql.Date) r[4]).toLocalDate());
+			dto.setIdConceptoPunto((Integer) r[5]);
+			dto.setConcepto((String) r[6]);
+			dto.setDetalles(new ArrayList<>());
+			mapa.put(id, dto);
+		}
+
+		if (mapa.isEmpty())
+			return new ArrayList<>();
+
+		@SuppressWarnings("unchecked")
+		List<Object[]> dets = em
+				.createNativeQuery("select ud.idusopuntocabecera, ud.id, b.id as id_bolsa, "
+						+ "       v.fecha_fin, b.saldo_punto, ud.puntos_consumidos " + "from usopuntodetalle ud "
+						+ "join bolsapunto b on b.id = ud.idbolsapunto "
+						+ "left join vencimientopunto v on v.id = b.idvencimientopunto "
+						+ "where ud.idusopuntocabecera in (:ids) " + "order by ud.id")
+				.setParameter("ids", mapa.keySet()).getResultList();
+
+		for (Object[] r : dets) {
+			Integer idCab = (Integer) r[0];
+			UsoPuntoDetalleDTO d = new UsoPuntoDetalleDTO();
+			d.setId((Integer) r[1]);
+			d.setIdBolsaPunto((Integer) r[2]);
+			java.sql.Date f = (java.sql.Date) r[3];
+			d.setFechaFin(f == null ? null : f.toLocalDate());
+			d.setSaldoPunto((Integer) r[4]);
+			d.setPuntajeUtilizado((Integer) r[5]); // puntos_consumidos
+			mapa.get(idCab).getDetalles().add(d);
+		}
+
+		return new ArrayList<>(mapa.values());
+	}
+
+	// Body de creación
+	public static class CrearCanjeRequest {
+		public Integer idCliente;
+		public Integer idConceptoPunto;
+		public Integer puntos; // opcional (null => usa punto_requerido)
+	}
+
+	@POST @Path("/canjes")
+	public Response crearCanje(CrearCanjeRequest req) {
+	  if (req == null || req.idCliente == null || req.idConceptoPunto == null)
+	    throw new WebApplicationException("idCliente e idConceptoPunto son obligatorios", 400);
+
+	  EntityManager em = XPersistence.getManager();
+
+	  Object raw = em.createNativeQuery("select fn_usar_puntos(:c,:p,cast(:n as integer))")
+	      .setParameter("c", req.idCliente)
+	      .setParameter("p", req.idConceptoPunto)
+	      .setParameter("n", req.puntos)
+	      .getSingleResult();
+
+	  if (raw == null) throw new WebApplicationException("No se pudo crear el canje", 500);
+
+	  Integer idCab;
+	  if (raw instanceof Number) {
+	    idCab = ((Number) raw).intValue();
+	  } else {
+	    idCab = Integer.valueOf(raw.toString());
+	  }
+
+	  UsoPuntoCabeceraDTO dto = obtenerCanje(idCab);
+	  return Response.created(UriBuilder.fromPath("/canjes/{id}").build(idCab)).entity(dto).build();
+	}
+
+
+	// OBTENER canje (DTO)
+	@GET @Path("/canjes/{id}")
+	public UsoPuntoCabeceraDTO obtenerCanje(@PathParam("id") Integer id) {
+	  EntityManager em = XPersistence.getManager();
+
+	  // 1) Cabecera segura (sin NoResultException)
+	  @SuppressWarnings("unchecked")
+	  List<Object[]> cabList = em.createNativeQuery(
+	    "select c.id, c.idcliente, (cl.nombre || ' ' || cl.apellido) as nombre_cliente, " +
+	    "       c.puntaje_utilizado, c.fecha, c.idconceptopunto, cp.concepto " +
+	    "from usopuntocabecera c " +
+	    "join cliente cl on cl.id = c.idcliente " +
+	    "join conceptopunto cp on cp.id = c.idconceptopunto " +
+	    "where c.id = :id"
+	  ).setParameter("id", id).getResultList();
+
+	  if (cabList.isEmpty()) {
+	    throw new WebApplicationException("Canje no encontrado", 404);
+	  }
+
+	  Object[] cab = cabList.get(0);
+
+	  UsoPuntoCabeceraDTO dto = new UsoPuntoCabeceraDTO();
+	  dto.setId(((Number) cab[0]).intValue());
+	  dto.setIdCliente(((Number) cab[1]).intValue());
+	  dto.setNombreCliente((String) cab[2]);
+	  dto.setPuntajeUtilizado(((Number) cab[3]).intValue());
+	  dto.setFecha(((java.sql.Date) cab[4]).toLocalDate());
+	  dto.setIdConceptoPunto(((Number) cab[5]).intValue());
+	  dto.setConcepto((String) cab[6]);
+
+	  // 2) Detalle
+	  @SuppressWarnings("unchecked")
+	  List<Object[]> dets = em.createNativeQuery(
+	    "select ud.id, v.fecha_fin, b.saldo_punto, ud.idbolsapunto, ud.puntos_consumidos " +
+	    "from usopuntodetalle ud " +
+	    "join bolsapunto b on b.id = ud.idbolsapunto " +
+	    "left join vencimientopunto v on v.id = b.idvencimientopunto " +
+	    "where ud.idusopuntocabecera = :id " +
+	    "order by ud.id"
+	  ).setParameter("id", id).getResultList();
+
+	  List<UsoPuntoDetalleDTO> ds = new ArrayList<>();
+	  for (Object[] r : dets) {
+	    UsoPuntoDetalleDTO d = new UsoPuntoDetalleDTO();
+	    d.setId(((Number) r[0]).intValue());
+	    java.sql.Date f = (java.sql.Date) r[1];
+	    d.setFechaFin(f == null ? null : f.toLocalDate());
+	    d.setSaldoPunto(r[2] == null ? null : ((Number) r[2]).intValue());
+	    d.setIdBolsaPunto(((Number) r[3]).intValue());
+	    d.setPuntajeUtilizado(((Number) r[4]).intValue()); // puntos_consumidos
+	    ds.add(d);
+	  }
+	  dto.setDetalles(ds);
+
+	  return dto;
+	}
+
+	// ACTUALIZAR canje: no permitido
+	@PUT
+	@Path("/canjes/{id}")
+	public Response actualizarCanje(@PathParam("id") Integer id, CrearCanjeRequest body) {
+		return Response.status(Response.Status.METHOD_NOT_ALLOWED)
+				.entity("No se permite actualizar un canje. Elimine y cree nuevamente.").build();
+	}
+
+	// ELIMINAR canje: trigger revierte puntos
+	@DELETE
+	@Path("/canjes/{id}")
+	public Response eliminarCanje(@PathParam("id") Integer id) {
+		EntityManager em = XPersistence.getManager();
+		try {
+			UsoPuntoCabecera c = em.find(UsoPuntoCabecera.class, id);
+			if (c == null)
+				return Response.status(404).entity("No encontrado").build();
+			em.remove(c); // BEFORE DELETE trigger devuelve puntos y borra detalle
+			return Response.ok("Eliminado y revertido").build();
+		} catch (Exception e) {
+			XPersistence.rollback();
+			return Response.serverError().entity("Error al eliminar: " + e.getMessage()).build();
+		}
+	}
 }

@@ -15,8 +15,14 @@ import py.gestion.sifi.validador.*;
 @View(members = "datos[#nombre, apellido, nacionalidad;"
 		+ "tipoDocumento, numeroDocumento, fechaNacimiento;"
 		+ "celular, email;]")
-@Entity
-@Getter@Setter
+@Entity @Getter @Setter
+@Table(
+  name = "cliente",
+  uniqueConstraints = {
+    @UniqueConstraint(name="uq_cliente_doc", columnNames={"cod_tipo_documento","numero_documento"})
+  }
+)
+
 public class Cliente {
 	
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

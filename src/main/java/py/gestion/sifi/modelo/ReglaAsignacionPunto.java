@@ -1,39 +1,51 @@
 package py.gestion.sifi.modelo;
 
 import javax.persistence.*;
+import javax.validation.constraints.*;
 
 import org.openxava.annotations.*;
 
 import lombok.*;
 import py.gestion.sifi.calculador.*;
 
-@View(members = "datos[#limiteInferior, limiteSuperior;"
-		+ "puntoEquivalente, montoEquivalente;]")
-@Entity
-@Getter@Setter
+@Entity @Getter @Setter
+@Table(name = "reglaasignacionpunto")
+@View(members = 
+  "datos[" +
+    "limiteInferior, limiteSuperior;" +
+    "puntoEquivalente, montoEquivalente;" +
+  "]"
+)
+@Tab(properties="id, limiteInferior, limiteSuperior, montoEquivalente, puntoEquivalente")
 public class ReglaAsignacionPunto {
-	
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Id @Hidden
-	@ReadOnly
-	private Integer id;
-	
-	//@OnChange(ReglaAsignacionPuntoAlCambiarLimiteInferiorAccion.class)
-	@Money
-	@Column(name = "limite_Inferior")
-	private Integer limiteInferior;
-	
-	@Money
-	@Column(name = "limite_Superior")
-	private Integer limiteSuperior;
-	
-	@DefaultValueCalculator(DefectoPunto.class)
-	@Column(name = "punto_Equivalente")
-	//@ReadOnly
-	private Integer puntoEquivalente;
-	
-	@Money
-	@Column(name = "monto_Equivalente")
-	private Integer montoEquivalente;
 
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Hidden @ReadOnly
+  private Integer id;
+
+  @Column(name = "limite_inferior")
+  private Integer limiteInferior;   // puede ser null (rango abierto inferior)
+
+  @Column(name = "limite_superior")
+  private Integer limiteSuperior;   // puede ser null (rango abierto superior)
+
+  @DefaultValueCalculator(DefectoPunto.class)
+  @Min(1)
+  @Column(name = "punto_equivalente")
+  private Integer puntoEquivalente; // > 0
+
+  @Min(1)
+  @Column(name = "monto_equivalente")
+  private Integer montoEquivalente; // > 0
+
+  /** Validación ligera en capa modelo */
+  @PrePersist @PreUpdate
+  private void validarCoherencia() {
+    if (montoEquivalente != null && montoEquivalente <= 0)
+      throw new IllegalArgumentException("montoEquivalente debe ser > 0");
+    if (puntoEquivalente != null && puntoEquivalente <= 0)
+      throw new IllegalArgumentException("puntoEquivalente debe ser > 0");
+    if (limiteInferior != null && limiteSuperior != null && limiteInferior > limiteSuperior)
+      throw new IllegalArgumentException("Rango inválido: limiteInferior > limiteSuperior");
+  }
 }

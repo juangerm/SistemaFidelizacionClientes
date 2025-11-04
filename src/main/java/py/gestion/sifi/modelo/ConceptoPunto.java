@@ -1,26 +1,31 @@
 package py.gestion.sifi.modelo;
 
 import javax.persistence.*;
+import javax.validation.constraints.*;
 
 import org.openxava.annotations.*;
 
 import lombok.*;
 import py.gestion.sifi.calculador.*;
 
-@View(name="simple", members = "concepto")
-@Entity
-@Getter@Setter
+@Entity @Getter @Setter
+@Table(name = "conceptopunto" /*,
+  uniqueConstraints = { @UniqueConstraint(name="uq_conceptopunto_concepto", columnNames = {"concepto"}) } */
+)
+@View(name="simple", members="concepto; puntoRequerido")
+@Tab(properties="id, concepto, puntoRequerido")
 public class ConceptoPunto {
-	
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Id @Hidden
-	@ReadOnly
-	private Integer id;
-	
-	@Column(name = "concepto")
-	private String concepto;
-	
-	@DefaultValueCalculator(DefectoPunto.class)
-	@Column(name = "punto_Requerido")
-	private Integer puntoRequerido;
+
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Hidden @ReadOnly
+  private Integer id;
+
+  @NotBlank
+  @Column(name = "concepto")
+  private String concepto;
+
+  @DefaultValueCalculator(DefectoPunto.class)
+  @Min(1)
+  @Column(name = "punto_requerido")
+  private Integer puntoRequerido;
 }

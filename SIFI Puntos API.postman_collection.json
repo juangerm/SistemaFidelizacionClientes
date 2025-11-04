@@ -1,0 +1,692 @@
+{
+	"info": {
+		"_postman_id": "9083125a-6475-41aa-a32a-0bdc82839d25",
+		"name": "SIFI Puntos API",
+		"description": "Base path: {{baseUrl}}",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "49771323",
+		"_collection_link": "https://juangerm78-7160166.postman.co/workspace/7d65cfd5-1798-49f9-84f8-6047185ad6e9/collection/49771323-9083125a-6475-41aa-a32a-0bdc82839d25?action=share&source=collection_link&creator=49771323"
+	},
+	"item": [
+		{
+			"name": "Clientes",
+			"item": [
+				{
+					"name": "Listar",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/clientes",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"clientes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/clientes/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"clientes",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Crear",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"NICO\",\n  \"apellido\": \"PIZURNO\",\n  \"numeroDocumento\": \"5555555\",\n  \"fechaNacimiento\": \"1996-10-20\",\n  \"celular\": \"0991999999\",\n  \"email\": \"nico@example.com\",\n  \"nacionalidad\": {\n    \"codNacionalidad\": 1\n  },\n  \"tipoDocumento\": {\n    \"codTipoDocumento\": 1\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/clientes",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"clientes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"NICO\",\n  \"apellido\": \"PIZURNO\",\n  \"numeroDocumento\": \"5555555\",\n  \"fechaNacimiento\": \"1996-10-20\",\n  \"celular\": \"0991888888\",\n  \"email\": \"nico.p@example.com\",\n  \"nacionalidad\": {\n    \"codNacionalidad\": 1\n  },\n  \"tipoDocumento\": {\n    \"codTipoDocumento\": 1\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/clientes/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"clientes",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/clientes/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"clientes",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Conceptos",
+			"item": [
+				{
+					"name": "Listar",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/conceptos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"conceptos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Crear",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"concepto\": \"CANJE BÁSICO\",\n  \"puntoRequerido\": 2\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/conceptos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"conceptos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"concepto\": \"CANJE ESTÁNDAR\",\n  \"puntoRequerido\": 3\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/conceptos/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"conceptos",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/conceptos/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"conceptos",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Reglas",
+			"item": [
+				{
+					"name": "Listar",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/reglas",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"reglas"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Crear",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"limiteInferior\": null,\n  \"limiteSuperior\": null,\n  \"montoEquivalente\": 10000,\n  \"puntoEquivalente\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/reglas",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"reglas"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"limiteInferior\": 20001,\n  \"limiteSuperior\": 50000,\n  \"montoEquivalente\": 20000,\n  \"puntoEquivalente\": 2\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/reglas/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"reglas",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/reglas/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"reglas",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Vencimientos",
+			"item": [
+				{
+					"name": "Listar",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/vencimientos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"vencimientos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Crear",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"diasValidez\": 30,\n  \"fechaInicio\": \"2025-11-04\",\n  \"fechaFin\": \"2025-12-03\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/vencimientos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"vencimientos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"diasValidez\": 45,\n  \"fechaInicio\": \"2025-11-04\",\n  \"fechaFin\": \"2025-12-18\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/vencimientos/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"vencimientos",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/vencimientos/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"vencimientos",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Bolsas",
+			"item": [
+				{
+					"name": "Listar",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/bolsas",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"bolsas"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/bolsas/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"bolsas",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Crear bolsa",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"cliente\": {\n    \"id\": 1\n  },\n  \"vencimientoPunto\": {\n    \"id\": 1\n  },\n  \"montoOperacion\": 25000.0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/bolsas",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"bolsas"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar monto (no toca puntos)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"idCliente\": 1,\n  \"idVencimientoPunto\": 1,\n  \"montoOperacion\": 30000.0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/bolsas/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"bolsas",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/bolsas/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"bolsas",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Por cliente (todas)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/bolsas/cliente/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"bolsas",
+								"cliente",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Por cliente (saldo>0)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/bolsas/cliente/1?soloConSaldo=true",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"bolsas",
+								"cliente",
+								"1"
+							],
+							"query": [
+								{
+									"key": "soloConSaldo",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Por cliente (vigentes)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/bolsas/cliente/1?soloVigentes=true",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"bolsas",
+								"cliente",
+								"1"
+							],
+							"query": [
+								{
+									"key": "soloVigentes",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Por cliente (disponibles)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/bolsas/cliente/1/disponibles",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"bolsas",
+								"cliente",
+								"1",
+								"disponibles"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Canjes",
+			"item": [
+				{
+					"name": "Listar",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/canjes",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"canjes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener por ID de Canje",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/canjes/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"canjes",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Crear canje",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"idCliente\": 1,\n  \"idConceptoPunto\": 1,\n  \"puntos\": null\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/canjes",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"canjes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar canje",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/canjes/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"canjes",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080/sifi/rest/api"
+		}
+	]
+}

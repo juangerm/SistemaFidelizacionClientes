@@ -19,6 +19,10 @@
 		<controlador nombre="Print"/>
 	</modulo>		
 	-->	  
+	 <modulo nombre="UsoPuntoCabecera">
+	   <modelo nombre="UsoPuntoCabecera"/>
+	   <controlador nombre="UsoPuntoCabecera"/>
+	 </modulo>
 		
 </aplicacion>
 

@@ -32,4 +32,13 @@ https://github.com/openxava/openxava/blob/master/openxavatest/src/main/resources
     </controlador>
     -->
     
+  <controlador nombre="UsoPuntoCabecera">
+    <hereda-de controlador="Typical"/>
+    <accion nombre="CanjearPuntos"
+            clase="py.gestion.sifi.acciones.UsarPuntosFifoAction"
+            modo="detail"
+            icono="execute"
+            atajo-de-teclado="Ctrl U"/>
+  </controlador>
+
 </controladores>

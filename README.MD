@@ -44,12 +44,21 @@ Incluye API REST para consumo externo y scripts SQL con triggers y funciones de 
 
 ## Configuración de base de datos
 
-El archivo `src/main/resources/META-INF/persistence.xml` define la conexión a PostgreSQL. Modificar segun corresponda.
+El archivo `src/main/webapp/META-INF/contex.xml` define la conexión a PostgreSQL. Modificar segun corresponda.
 
     ```xml
 	<property name="hibernate.connection.url" value="jdbc:postgresql://localhost:5432/sifidb"/>
 	<property name="hibernate.connection.username" value="postgres"/>
 	<property name="hibernate.connection.password" value="12345"/>
+
+El archivo `src/main/resources/META-INF/persistence.xml` define la conexión a PostgreSQL. Modificar segun corresponda.
+
+    ```xml
+	<Resource name="jdbc/sifiDS" auth="Container" type="javax.sql.DataSource"
+	    username="postgres" password="12345" 
+	    driverClassName="org.postgresql.Driver" 
+	    url="jdbc:postgresql://localhost:5432/sifidb"/>
+
 
 
 ## Ejecución local

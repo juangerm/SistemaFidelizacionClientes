@@ -34,7 +34,7 @@ openxava-app/
 │ ├── migration/ # scripts SQL de creación de tablas (DDL)
 │ └── seed/ # datos de ejemplo (opcional)
 ├── .gitignore
-├── README.md
+└── README.md
 ---
 
 ## ⚙️ Configuración de base de datos

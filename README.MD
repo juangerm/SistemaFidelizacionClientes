@@ -25,20 +25,21 @@ Asegúrate de tener instalados:
 ---
 
 ## Estructura del proyecto
+    ```bash
+    openxava-app/
+    ├── pom.xml # Configuración Maven + dependencias OpenXava
+    ├── src/
+    │ ├── main/
+    │ │ ├── java/ # Entidades, controladores y lógica de negocio
+    │ │ ├── resources/ # i18n, persistence.xml, configs
+    │ │ └── webapp/ # vistas, recursos estáticos, etc.
+    │ └── test/ # pruebas unitarias
+    ├── db/
+    │ ├── migration/ # scripts SQL de creación de tablas (DDL)
+    │ └── seed/ # datos de ejemplo (opcional)
+    ├── .gitignore
+    └── README.md
 
-openxava-app/
-├── pom.xml # Configuración Maven + dependencias OpenXava
-├── src/
-│ ├── main/
-│ │ ├── java/ # Entidades, controladores y lógica de negocio
-│ │ ├── resources/ # i18n, persistence.xml, configs
-│ │ └── webapp/ # vistas, recursos estáticos, etc.
-│ └── test/ # pruebas unitarias
-├── db/
-│ ├── migration/ # scripts SQL de creación de tablas (DDL)
-│ └── seed/ # datos de ejemplo (opcional)
-├── .gitignore
-└── README.md
 ---
 
 ## Configuración de base de datos
@@ -46,19 +47,18 @@ openxava-app/
 El archivo `src/main/resources/META-INF/persistence.xml` define la conexión a PostgreSQL.  
 Utiliza **placeholders** para evitar subir credenciales reales:
 
-```xml
+    ```xml
 	<property name="hibernate.connection.url" value="jdbc:postgresql://localhost:5432/sifidb"/>
 	<property name="hibernate.connection.username" value="postgres"/>
 	<property name="hibernate.connection.password" value="12345"/>
 
----
 
 ## Ejecución local
 
 1. Clona el repositorio:
    ```bash
    git clone https://github.com/juangerm/SistemaFidelizacionClientes.git
-   cd sifi-openxava
+
 ---
 
 2. Compilar y ejecutar con Maven:
@@ -76,7 +76,7 @@ Si se utiliza otra BD, ajustar el persistence.xml antes de ejecutar.
 
 #### Referencia rápida a los scripts SQL
 
-```markdown
+
 ## Inicialización de base de datos
 
 En la carpeta `/db` se incluyen los scripts:
@@ -86,9 +86,7 @@ En la carpeta `/db` se incluyen los scripts:
 | `sifi_db_init.sql` | Estructura completa (tablas, funciones, triggers). |
 | `sifi_seed.sql` | Datos mínimos de prueba: clientes, reglas, vencimientos, bolsas y canje ejemplo. |
 
-#### API REST de referencia (si ya lo expusiste)
 
-```markdown
 ## Endpoints principales (REST)
 
 | Recurso | Método | Descripción |
@@ -101,7 +99,7 @@ En la carpeta `/db` se incluyen los scripts:
 
 ---
 
-## 👨‍💻 Autores
+## Autores
 **Cesar Rodrigo Cabañas**  
 **Juan Gerardo Benitez Romero**  
 **Nicolás Ayala Pizurno**  

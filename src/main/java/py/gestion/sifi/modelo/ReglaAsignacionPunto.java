@@ -6,6 +6,7 @@ import javax.validation.constraints.*;
 import org.openxava.annotations.*;
 
 import lombok.*;
+import py.gestion.sifi.alCambiar.*;
 import py.gestion.sifi.calculador.*;
 
 @Entity @Getter @Setter
@@ -22,10 +23,15 @@ public class ReglaAsignacionPunto {
   @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Hidden @ReadOnly
   private Integer id;
-
+  
+  @OnChange(ValidadLimiteInferiorAlCambiarAccion.class)
+  //@DefaultValueCalculator(DefectoCalcularLimiteInferior.class)
+  @Money
   @Column(name = "limite_inferior")
   private Integer limiteInferior;   // puede ser null (rango abierto inferior)
-
+  
+  @OnChange(ValidadLimiteSuperiorAlCambiarAccion.class)
+  @Money
   @Column(name = "limite_superior")
   private Integer limiteSuperior;   // puede ser null (rango abierto superior)
 
@@ -34,6 +40,8 @@ public class ReglaAsignacionPunto {
   @Column(name = "punto_equivalente")
   private Integer puntoEquivalente; // > 0
 
+  @Money
+  @DefaultValueCalculator(DefectoPunto.class)
   @Min(1)
   @Column(name = "monto_equivalente")
   private Integer montoEquivalente; // > 0

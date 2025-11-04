@@ -10,6 +10,7 @@ import org.openxava.annotations.*;
 import org.openxava.calculators.*;
 
 import lombok.*;
+import py.gestion.sifi.alCambiar.*;
 
 @Entity @Getter @Setter
 @Table(name = "usopuntocabecera")
@@ -17,7 +18,7 @@ import lombok.*;
 @View(name="simple", members="id")
 @View(members=
   "cliente; " +
-  "datos[#puntajeUtilizado, fecha, conceptoPunto;]; " +
+  "datos[#fecha, conceptoPunto, puntajeUtilizado;]; " +
   "detalle"  // se mostrará solo-lectura
 )
 public class UsoPuntoCabecera {
@@ -42,6 +43,7 @@ public class UsoPuntoCabecera {
   @DefaultValueCalculator(CurrentLocalDateCalculator.class)
   private LocalDate fecha;
 
+  @OnChange(UsoPuntoCabeceraAlCambiarConceptoPuntoAccion.class)
   @ReferenceView("simple")
   @ManyToOne(fetch = FetchType.LAZY, optional = true)
   @JoinColumn(name = "idconceptopunto", columnDefinition = "integer",

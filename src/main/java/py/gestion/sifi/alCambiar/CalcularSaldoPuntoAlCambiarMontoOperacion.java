@@ -39,7 +39,8 @@ public class CalcularSaldoPuntoAlCambiarMontoOperacion extends OnChangePropertyB
 			 monto = (Integer) XPersistence.getManager()
 					.createNativeQuery(" select monto_equivalente "
 							+ "from reglaasignacionpunto "
-							+ "WHERE :montoOperacion BETWEEN limite_inferior AND limite_superior ")
+							+ "WHERE ((:montoOperacion BETWEEN limite_inferior AND limite_superior) "
+							+ " OR (limite_superior IS NULL AND :montoOperacion >= limite_inferior))")
 					.setParameter("montoOperacion", montoOperacion)
 					.getSingleResult();
 		} catch (Exception e) {
@@ -55,7 +56,8 @@ public class CalcularSaldoPuntoAlCambiarMontoOperacion extends OnChangePropertyB
 			 monto = (Integer) XPersistence.getManager()
 					.createNativeQuery(" select punto_equivalente "
 							+ "from reglaasignacionpunto "
-							+ "WHERE :montoOperacion BETWEEN limite_inferior AND limite_superior ")
+							+ "WHERE  ((:montoOperacion BETWEEN limite_inferior AND limite_superior) "
+							+ " OR (limite_superior IS NULL AND :montoOperacion >= limite_inferior))")
 					.setParameter("montoOperacion", montoOperacion)
 					.getSingleResult();
 		} catch (Exception e) {

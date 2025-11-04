@@ -18,6 +18,7 @@ public class ReglaAsignacionPunto {
 	@ReadOnly
 	private Integer id;
 	
+	//@OnChange(ReglaAsignacionPuntoAlCambiarLimiteInferiorAccion.class)
 	@Money
 	@Column(name = "limite_Inferior")
 	private Integer limiteInferior;

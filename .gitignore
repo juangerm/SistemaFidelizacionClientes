@@ -1,0 +1,45 @@
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+
+# Compilados
+*.class
+*.war
+*.ear
+
+# Logs/temps
+logs/
+*.log
+tmp/
+**/.cache/
+
+# SO
+.DS_Store
+Thumbs.db
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+.project
+.classpath
+.settings/
+
+# Entornos/secretos
+.env
+*.env
+application.properties
+application.yml
+persistence.xml.local
+*.keystore
+*.jks
+
+# DB locales / dumps (mantén solo seeds públicos)
+*.db
+*.mv.db
+*.script
+dump/
+
+
+temp/

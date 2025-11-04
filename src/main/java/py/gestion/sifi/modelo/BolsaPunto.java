@@ -7,6 +7,8 @@ import javax.persistence.*;
 import org.openxava.annotations.*;
 
 import lombok.*;
+import py.gestion.sifi.alCambiar.*;
+import py.gestion.sifi.calculador.*;
 
 @Tab(name = "simple",properties ="id, vencimientoPunto.fechaFin, puntajeUtilizado, saldoPunto" )
 @View(name = "simple", members = "id, vencimientoPunto, puntajeUtilizado, saldoPunto")
@@ -39,9 +41,11 @@ public class BolsaPunto {
 	@Column(name = "puntaje_Asignado")
 	private Integer puntajeAsignado;
 	
+	@DefaultValueCalculator(DefectoPuntajeUtilizado.class)
 	@Column(name = "puntaje_Utilizado")
 	private Integer puntajeUtilizado;
 	
+	@OnChange(BolsaPuntoAlCambiarPuntajeUtilizadoAccion.class)
 	@Column(name = "saldo_Punto")
 	private Integer saldoPunto;
 	

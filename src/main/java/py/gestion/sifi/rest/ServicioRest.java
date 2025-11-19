@@ -8,6 +8,7 @@ import javax.ws.rs.core.*;
 
 import org.openxava.jpa.*;
 
+import py.gestion.sifi.dto.*;
 import py.gestion.sifi.modelo.*;
 
 @Path("/api")

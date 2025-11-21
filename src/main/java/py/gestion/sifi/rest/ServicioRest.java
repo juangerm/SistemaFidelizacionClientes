@@ -1,5 +1,6 @@
 package py.gestion.sifi.rest;
 
+import java.time.*;
 import java.util.*;
 
 import javax.persistence.*;
@@ -71,6 +72,106 @@ public class ServicioRest {
 		if (c == null)
 			throw new WebApplicationException("Cliente no encontrado", 404);
 		return toDTO(c);
+	}
+	
+	@GET
+	@Path("/clientes/segmento")
+	public List<ClienteSegmentoDTO> segmentarClientes(
+	        @QueryParam("edadMin") Integer edadMin,
+	        @QueryParam("edadMax") Integer edadMax,
+	        @QueryParam("pais") String pais,
+	        @QueryParam("comprasMin") Integer comprasMin
+	) {
+	    EntityManager em = XPersistence.getManager();
+
+	    StringBuilder jpql = new StringBuilder("SELECT c FROM Cliente c WHERE 1=1 ");
+	    if (edadMin != null) jpql.append(" AND c.fechaNacimiento <= :fechaMax ");
+	    if (edadMax != null) jpql.append(" AND c.fechaNacimiento >= :fechaMin ");
+	    if (pais != null && !pais.isEmpty()) jpql.append(" AND UPPER(c.nacionalidad.pais.descripcion) = UPPER(:pais) ");
+
+	    TypedQuery<Cliente> query = em.createQuery(jpql.toString(), Cliente.class);
+
+	    LocalDate hoy = LocalDate.now();
+	    if (edadMin != null) query.setParameter("fechaMax", hoy.minusYears(edadMin));
+	    if (edadMax != null) query.setParameter("fechaMin", hoy.minusYears(edadMax));
+	    if (pais != null && !pais.isEmpty()) query.setParameter("pais", pais);
+
+	    List<Cliente> clientes = query.getResultList();
+	    List<ClienteSegmentoDTO> out = new ArrayList<>();
+
+	    for (Cliente c : clientes) {
+
+	        List<UsoPuntoCabecera> compras = em.createQuery(
+	                "SELECT u FROM UsoPuntoCabecera u WHERE u.cliente.id = :cliente ORDER BY u.fecha DESC",
+	                UsoPuntoCabecera.class)
+	                .setParameter("cliente", c.getId())
+	                .getResultList();
+
+	        int totalCompras = compras.size();
+
+	        if (comprasMin != null && totalCompras < comprasMin) continue;
+
+	        LocalDate fechaUltimaCompra = compras.isEmpty()
+	                ? null
+	                : compras.get(0).getFecha();
+
+	        Set<String> conceptos = new HashSet<>();
+	        for (UsoPuntoCabecera cab : compras) {
+	            if (cab.getConceptoPunto() != null) {
+	                conceptos.add(cab.getConceptoPunto().getConcepto());
+	            }
+	        }
+ 
+	        ClienteSegmentoDTO dto = new ClienteSegmentoDTO();
+	        dto.id = c.getId();
+	        dto.nombre = c.getNombre();
+	        dto.ciudad = c.getNacionalidad().getPais().getDescripcion();
+	        dto.totalCompras = totalCompras;
+	        dto.ultimaCompra = fechaUltimaCompra;
+	        dto.conceptosComprados = new ArrayList<>(conceptos);
+
+	        out.add(dto);
+	    }
+
+	    return out;
+	}
+
+	@GET
+	@Path("/clientes/{id}/nivel")
+	public NivelClienteDTO obtenerNivelCliente(@PathParam("id") Integer id) {
+
+	    EntityManager em = XPersistence.getManager();
+	    Cliente c = em.find(Cliente.class, id);
+
+	    if (c == null)
+	        throw new WebApplicationException("Cliente no encontrado", 404);
+
+	    Integer puntos = c.getPuntosAcumulados();
+	    if (puntos == null) puntos = 0;
+
+	    List<NivelFidelizacion> niveles = em.createQuery(
+	        "SELECT n FROM NivelFidelizacion n " +
+	        "WHERE (n.puntoMaximo IS NOT NULL AND :p BETWEEN n.puntoMinimo AND n.puntoMaximo) " +
+	        "   OR (n.puntoMaximo IS NULL AND :p >= n.puntoMinimo)",
+	        NivelFidelizacion.class
+	    )
+	    .setParameter("p", puntos)
+	    .getResultList();
+
+	    if (niveles.isEmpty()) {
+	        throw new WebApplicationException("No existe nivel para " + puntos + " puntos", 404);
+	    }
+
+	    NivelFidelizacion nivel = niveles.get(0);
+
+	    return new NivelClienteDTO(
+	        c.getNombre() + " " + c.getApellido(),
+	        nivel.getDescripcion(),              
+	        nivel.getPuntoMinimo(),         
+	        nivel.getPuntoMaximo(),         
+	        puntos,                         
+	        nivel.getBeneficios()            
+	    );
 	}
 
 	@POST
@@ -607,4 +708,63 @@ public class ServicioRest {
 			return Response.serverError().entity("Error al eliminar: " + e.getMessage()).build();
 		}
 	}
+	
+	/*
+	 * =========================== Referir Cliente ===========================
+	 */
+	
+	@POST
+	@Path("/referirCliente")
+	public ReferirClienteDTO crearReferido(ReferirCliente r) {
+	    EntityManager em = XPersistence.getManager();
+
+	    // Buscar cliente que refiere
+	    Cliente cliente = em.find(Cliente.class, r.getCliente().getId());
+	    if (cliente == null) {
+	        throw new WebApplicationException("Cliente que refiere no encontrado", 404);
+	    }
+
+	    // Crear nuevo cliente (referido)
+	    Cliente nuevoReferido = new Cliente();
+	    Cliente refData = r.getReferido(); // datos enviados en JSON
+
+	    nuevoReferido.setNombre(refData.getNombre());
+	    nuevoReferido.setApellido(refData.getApellido());
+	    nuevoReferido.setNumeroDocumento(refData.getNumeroDocumento());
+	    nuevoReferido.setTipoDocumento(refData.getTipoDocumento());
+	    nuevoReferido.setNacionalidad(refData.getNacionalidad());
+	    nuevoReferido.setEmail(refData.getEmail());
+	    nuevoReferido.setCelular(refData.getCelular());
+	    nuevoReferido.setFechaNacimiento(refData.getFechaNacimiento());
+	    //nuevoReferido.setPuntosAcumulados(0); // inicia con 0
+
+	    em.persist(nuevoReferido);
+
+	    // Crear vencimiento de puntos
+	    VencimientoPunto vp = new VencimientoPunto();
+	    vp.setFechaInicio(LocalDate.now());
+	    vp.setDiasValidez(r.getVencimientoPunto().getDiasValidez());
+	    vp.setFechaFin(LocalDate.now().plusDays(vp.getDiasValidez()));
+	    em.persist(vp);
+
+	    // Crear registro de referido
+	    ReferirCliente registro = new ReferirCliente();
+	    registro.setCliente(cliente);
+	    registro.setReferido(nuevoReferido);
+	    registro.setVencimientoPunto(vp);
+	    registro.setFechaRegistro(LocalDate.now());
+	    registro.setPuntosObtenidos(100);
+	    em.persist(registro);
+
+	    // DTO de respuesta
+	    ReferirClienteDTO dto = new ReferirClienteDTO();
+	    dto.setIdReferido(nuevoReferido.getId());
+	    dto.setNombreCompletoReferido(nuevoReferido.getNombre() + " " + nuevoReferido.getApellido());
+	    dto.setPuntosObtenidos(registro.getPuntosObtenidos());
+	    dto.setFechaVencimientoPuntos(vp.getFechaFin());
+
+	    return dto;
+	}
+
+
 }

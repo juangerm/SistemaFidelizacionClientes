@@ -1,11 +1,14 @@
 package py.gestion.sifi.modelo;
 
+import java.math.*;
+
 import javax.persistence.*;
 import javax.validation.constraints.*;
 
 import org.openxava.annotations.*;
 
 import lombok.*;
+import py.gestion.sifi.alCambiar.*;
 import py.gestion.sifi.calculador.*;
 
 @Entity @Getter @Setter
@@ -21,8 +24,13 @@ public class ConceptoPunto {
   private Integer id;
 
   @NotBlank
+  //@Required
   @Column(name = "concepto")
   private String concepto;
+  
+  @OnChange(CalcularPuntoRequeridoAlCambiarPrecio.class)
+  @Column(name = "precio")
+  private BigDecimal precio;
 
   @DefaultValueCalculator(DefectoPunto.class)
   @Min(1)

@@ -8,13 +8,14 @@ import org.openxava.annotations.*;
 import org.openxava.calculators.*;
 
 import lombok.*;
+import py.gestion.sifi.acciones.*;
 import py.gestion.sifi.validador.*;
 
 @Tab(name="simple", properties = "id, nombre, apellido, numeroDocumento")
 @View(name = "simple",members = "cliente[#id, nombre, apellido, numeroDocumento;]")
 @View(members = "datos[#nombre, apellido, nacionalidad;"
 		+ "tipoDocumento, numeroDocumento, fechaNacimiento;"
-		+ "celular, email;]")
+		+ "celular, email, puntosAcumulados;]")
 @Entity @Getter @Setter
 @Table(
   name = "cliente",
@@ -30,6 +31,7 @@ public class Cliente {
 	@ReadOnly
 	private Integer id;
 	
+	
 	@Column(name = "nombre")
 	private String nombre;
 	
@@ -40,6 +42,7 @@ public class Cliente {
 	@Column(name = "numero_documento", length = 12)
 	private String numeroDocumento;
 	
+	@OnChange(CalcularPuntosAcumuladosAccion.class)
 	@ManyToOne(fetch = FetchType.LAZY, optional = true)
 	@JoinColumn(name = "cod_tipo_documento", columnDefinition = "integer", foreignKey = @ForeignKey(name = "Fk_cliente_tipoDocumento"))
 	@DescriptionsList
@@ -70,5 +73,9 @@ public class Cliente {
 	@DefaultValueCalculator(CurrentLocalDateCalculator.class)
 //	@OnChange(PersonaFisicaAlCambiarFechaNacimiento.class)
 	private LocalDate fechaNacimiento;
+	
+	@ReadOnly
+	@Column(name = "puntos_acumulados", columnDefinition = "integer")
+	private Integer puntosAcumulados;
 
 }

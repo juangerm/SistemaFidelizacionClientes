@@ -14,6 +14,7 @@ import py.gestion.sifi.alCambiar.*;
 
 @View(name="completo", members = "fechaInicio, diasValidez, fechaFin")
 @View(members = "fechaInicio; diasValidez; fechaFin")
+@View(name="reSimple", members = "diasValidez, fechaFin")
 @Entity
 @Getter@Setter
 public class VencimientoPunto {

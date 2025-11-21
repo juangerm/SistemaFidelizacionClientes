@@ -22,6 +22,7 @@ public class BolsaPunto {
 	@ReadOnly
 	private Integer id;
 	
+	
 	@ReferenceView("simple")
 	@ManyToOne(fetch = FetchType.LAZY, optional = true)
 	@JoinColumn(name = "idCliente", columnDefinition = "integer", foreignKey = @ForeignKey(name = "Fk_bolsaPunto_cliente"))
@@ -38,10 +39,12 @@ public class BolsaPunto {
 	@NoModify//@NoSearch
 	private VencimientoPunto vencimientoPunto;
 	
+	@ReadOnly
+	//@OnChange(CalcularPuntosAcumuladosAccion.class)
 	@Column(name = "puntaje_Asignado")
 	private Integer puntajeAsignado;
 	
-	@OnChange(CalcularSaldoPuntoAlCambiarPuntajeUtilizado.class)
+	//@OnChange(CalcularSaldoPuntoAlCambiarPuntajeUtilizado.class)
 	@DefaultValueCalculator(DefectoPuntajeUtilizadoBolsaPunto.class)
 	@Column(name = "puntaje_Utilizado")
 	private Integer puntajeUtilizado;
@@ -50,6 +53,7 @@ public class BolsaPunto {
 	@Column(name = "saldo_Punto")
 	private Integer saldoPunto;
 	
+	@OnChange(CalcularSaldoPuntoAlCambiarPuntajeUtilizado.class)
 	@OnChange(CalcularSaldoPuntoAlCambiarMontoOperacion.class)
 	@Money
 	@Column(name = "monto_Operacion")

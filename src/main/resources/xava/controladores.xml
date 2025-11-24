@@ -40,5 +40,17 @@ https://github.com/openxava/openxava/blob/master/openxavatest/src/main/resources
             icono="execute"
             atajo-de-teclado="Ctrl U"/>
   </controlador>
+  
+  <controlador nombre="Encuesta">
+  	<hereda-de controlador="Typical"/>
+    <accion nombre="verEstadisticas"
+            clase="py.gestion.sifi.acciones.VerEstadisticasEncuestaAccion"
+            icono="info" 
+            modo="detail"/>
+   </controlador>
+   
+ 
+  
+  
 
 </controladores>

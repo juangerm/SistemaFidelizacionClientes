@@ -14,6 +14,5 @@ public class UsoPuntoCabeceraDTO {
     private LocalDate fecha;
     private Integer idConceptoPunto;
     private String concepto;
-    private Integer idProducto;
     private List<UsoPuntoDetalleDTO> detalles;
 }

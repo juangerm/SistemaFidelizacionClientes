@@ -44,7 +44,7 @@ public class BolsaPunto {
 	@Column(name = "puntaje_Asignado")
 	private Integer puntajeAsignado;
 	
-	//@OnChange(CalcularSaldoPuntoAlCambiarPuntajeUtilizado.class)
+	@OnChange(CalcularSaldoPuntoAlCambiarPuntajeUtilizado.class)
 	@DefaultValueCalculator(DefectoPuntajeUtilizadoBolsaPunto.class)
 	@Column(name = "puntaje_Utilizado")
 	private Integer puntajeUtilizado;

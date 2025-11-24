@@ -14,6 +14,10 @@ import py.gestion.sifi.modelo.*;
 @Produces(MediaType.APPLICATION_JSON)
 public class EncuestaRest {
 	
+	/*
+	 * =========================== Encuestas de Satisfaccion ===========================
+	 */
+	
 	@Path("/CrearEncuestas")
     @POST
     public Response crearEncuesta(Encuesta encuesta) {

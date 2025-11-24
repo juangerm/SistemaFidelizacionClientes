@@ -1,5 +1,6 @@
 package py.gestion.sifi.rest;
 
+import java.math.*;
 import java.time.*;
 import java.util.*;
 
@@ -49,6 +50,37 @@ public class ServicioRest {
 				b.getVencimientoPunto() != null ? b.getVencimientoPunto().getFechaFin().toString() : null);
 		return dto;
 	}
+	
+	private static PromocionDTO toDTO(Promocion p) {
+	    PromocionDTO dto = new PromocionDTO();
+	    dto.setId(p.getId());
+	    dto.setNombre(p.getNombre());
+	    dto.setInicio(p.getInicio());
+	    dto.setFin(p.getFin());
+	    dto.setPuntosExtra(p.getPuntosExtra());
+
+	    if (p.getProducto() != null) {
+	        dto.setProductoId(p.getProducto().getId());
+	    }
+
+	    return dto;
+	}
+	
+	private VentaDTO toDTO(Venta v) {
+	    VentaDTO dto = new VentaDTO();
+	    dto.setId(v.getId());
+	    dto.setClienteId(v.getCliente().getId());
+	    dto.setProductoId(v.getProducto().getId());
+	    dto.setCantidad(v.getCantidad());
+	    dto.setPrecio(v.getPrecio());
+	    dto.setTotal(v.getTotal());
+	    dto.setFecha(v.getFecha());
+	    dto.setPuntosBase(v.getPuntosBase());
+	    dto.setPuntosPromo(v.getPuntosPromo());
+	    dto.setPuntosTotales(v.getPuntosTotales());
+	    return dto;
+	}
+
 
 	/*
 	 * =========================== CLIENTES ===========================
@@ -764,6 +796,110 @@ public class ServicioRest {
 	    dto.setFechaVencimientoPuntos(vp.getFechaFin());
 
 	    return dto;
+	}
+	
+	/*
+	 * =========================== Promociones ===========================
+	 */
+
+	@GET 
+	@Path("/promociones/activas")
+	public List<PromocionDTO> promocionesActivas() {
+
+	    LocalDate hoy = LocalDate.now();
+
+	    List<Promocion> list = XPersistence.getManager()
+	        .createQuery("FROM Promocion p WHERE p.inicio <= :hoy AND p.fin >= :hoy", Promocion.class)
+	        .setParameter("hoy", hoy)
+	        .getResultList();
+
+	    return list.stream()
+	            .map(p -> toDTO(p))
+	            .toList();
+	}
+	
+	@POST 
+	@Path("/promociones")
+	public Promocion crearPromocion(Promocion p) {
+	    XPersistence.getManager().persist(p);
+	    return p;
+	}
+
+	/*
+	 * =========================== Venta ===========================
+	 */
+	@GET
+	@Path("/listarVenta")
+	public List<VentaDTO> listar(
+	        @QueryParam("inicio") String inicioStr,
+	        @QueryParam("fin") String finStr) {
+
+	    EntityManager em = XPersistence.getManager();
+
+	    LocalDate inicio = null;
+	    LocalDate fin = null;
+
+	    // Convertimos fechas si las envían
+	    if (inicioStr != null && !inicioStr.isEmpty()) {
+	        inicio = LocalDate.parse(inicioStr);
+	    }
+
+	    if (finStr != null && !finStr.isEmpty()) {
+	        fin = LocalDate.parse(finStr);
+	    }
+
+	    String jpql = "SELECT v FROM Venta v WHERE 1=1";
+
+	    if (inicio != null) {
+	        jpql += " AND v.fecha >= :inicio";
+	    }
+
+	    if (fin != null) {
+	        jpql += " AND v.fecha <= :fin";
+	    }
+
+	    TypedQuery<Venta> query = em.createQuery(jpql, Venta.class);
+
+	    if (inicio != null) {
+	        query.setParameter("inicio", inicio);
+	    }
+
+	    if (fin != null) {
+	        query.setParameter("fin", fin);
+	    }
+
+	    List<Venta> ventas = query.getResultList();
+
+	    // Convertimos a DTO
+	    return ventas.stream()
+	            .map(v -> toDTO(v))
+	            .toList();
+	}
+
+	
+	@POST
+    @Path("/crearVenta")
+	public VentaDTO crear(VentaDTO dto) {
+
+	    EntityManager em = XPersistence.getManager();
+
+
+	    Cliente cliente = em.find(Cliente.class, dto.getClienteId());
+	    Producto producto = em.find(Producto.class, dto.getProductoId());
+
+	    //Crear la entidad Venta
+	    Venta venta = new Venta();
+	    venta.setCliente(cliente);
+	    venta.setProducto(producto);
+	    venta.setCantidad(dto.getCantidad());
+
+	    venta.setPrecio(producto.getPrecioReferencia());
+	    venta.setTotal(producto.getPrecioReferencia().multiply(BigDecimal.valueOf(dto.getCantidad())));
+
+	    em.persist(venta);
+	    XPersistence.commit();
+
+	    return toDTO(venta);
 	}
 
 

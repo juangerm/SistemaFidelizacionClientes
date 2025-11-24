@@ -17,8 +17,9 @@ import lombok.*;
 		"nombre, descripcion;" +
 		"puntosRequeridos, precioReferencia;" +
 		"activo;" +
-	"]"
-)
+	"]")
+@View(name = "promocion", members = "nombre, precioReferencia")
+
 public class Producto {
 
 	@Id

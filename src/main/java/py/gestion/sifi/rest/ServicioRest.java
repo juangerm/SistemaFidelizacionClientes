@@ -125,7 +125,11 @@ public class ServicioRest {
 	        ClienteSegmentoDTO dto = new ClienteSegmentoDTO();
 	        dto.id = c.getId();
 	        dto.nombre = c.getNombre();
-	        dto.ciudad = c.getNacionalidad().getPais().getDescripcion();
+	        // para evitar null pointer
+	        if (c.getNacionalidad() != null && c.getNacionalidad().getPais() != null) {
+	            dto.ciudad = c.getNacionalidad().getPais().getDescripcion();
+	        }
+	        
 	        dto.totalCompras = totalCompras;
 	        dto.ultimaCompra = fechaUltimaCompra;
 	        dto.conceptosComprados = new ArrayList<>(conceptos);
@@ -228,6 +232,15 @@ public class ServicioRest {
 			XPersistence.rollback();
 			return Response.serverError().entity("Error al eliminar: " + e.getMessage()).build();
 		}
+	}
+	
+	@GET @Path("/clientes/{id}/saldo")
+	public Integer obtenerSaldo(@PathParam("id") Integer id) {
+	    Object r = XPersistence.getManager()
+	        .createNativeQuery("SELECT fn_total_saldo_disponible(:id)")
+	        .setParameter("id", id)
+	        .getSingleResult();
+	    return r == null ? 0 : Integer.parseInt(r.toString());
 	}
 
 	/*
@@ -624,21 +637,19 @@ public class ServicioRest {
 	  UsoPuntoCabeceraDTO dto = obtenerCanje(idCab);
 	  return Response.created(UriBuilder.fromPath("/canjes/{id}").build(idCab)).entity(dto).build();
 	}
-
-
+	
 	// OBTENER canje (DTO)
 	@GET @Path("/canjes/{id}")
 	public UsoPuntoCabeceraDTO obtenerCanje(@PathParam("id") Integer id) {
 	  EntityManager em = XPersistence.getManager();
 
-	  // 1) Cabecera segura (sin NoResultException)
 	  @SuppressWarnings("unchecked")
 	  List<Object[]> cabList = em.createNativeQuery(
 	    "select c.id, c.idcliente, (cl.nombre || ' ' || cl.apellido) as nombre_cliente, " +
 	    "       c.puntaje_utilizado, c.fecha, c.idconceptopunto, cp.concepto " +
 	    "from usopuntocabecera c " +
 	    "join cliente cl on cl.id = c.idcliente " +
-	    "join conceptopunto cp on cp.id = c.idconceptopunto " +
+	    "left join conceptopunto cp on cp.id = c.idconceptopunto " +  // <-- cambio aquí
 	    "where c.id = :id"
 	  ).setParameter("id", id).getResultList();
 
@@ -654,7 +665,7 @@ public class ServicioRest {
 	  dto.setNombreCliente((String) cab[2]);
 	  dto.setPuntajeUtilizado(((Number) cab[3]).intValue());
 	  dto.setFecha(((java.sql.Date) cab[4]).toLocalDate());
-	  dto.setIdConceptoPunto(((Number) cab[5]).intValue());
+	  dto.setIdConceptoPunto(cab[5] == null ? null : ((Number) cab[5]).intValue());
 	  dto.setConcepto((String) cab[6]);
 
 	  // 2) Detalle
@@ -708,6 +719,7 @@ public class ServicioRest {
 			return Response.serverError().entity("Error al eliminar: " + e.getMessage()).build();
 		}
 	}
+
 	
 	/*
 	 * =========================== Referir Cliente ===========================
@@ -766,5 +778,173 @@ public class ServicioRest {
 	    return dto;
 	}
 
+	/*
+	 * =========================== Productos ===========================
+	 */
+	
+    @GET
+    @Path("/productos/{id}")
+    public Producto obtenerProducto(@PathParam("id") Integer id) {
+        EntityManager em = XPersistence.getManager();
+        Producto p = em.find(Producto.class, id);
+        if (p == null) {
+            throw new WebApplicationException("Producto no encontrado", 404);
+        }
+        return p;
+    }
+    
+	@GET @Path("/productos")
+	public List<Producto> listarProductos() {
+	    return XPersistence.getManager()
+	        .createQuery("from Producto", Producto.class)
+	        .getResultList();
+	}
+
+	@POST @Path("/productos")
+	public Producto crearProducto(Producto p) {
+	    XPersistence.getManager().persist(p);
+	    return p;
+	}
+	
+    @PUT
+    @Path("/productos/{id}")
+    public Producto actualizarProducto(@PathParam("id") Integer id, Producto in) {
+        EntityManager em = XPersistence.getManager();
+        try {
+            Producto p = em.find(Producto.class, id);
+            if (p == null) {
+                throw new WebApplicationException("Producto no encontrado", 404);
+            }
+
+            p.setNombre(in.getNombre());
+            p.setDescripcion(in.getDescripcion());
+            p.setPuntosRequeridos(in.getPuntosRequeridos());
+            p.setPrecioReferencia(in.getPrecioReferencia());
+            p.setActivo(in.getActivo() != null ? in.getActivo() : p.getActivo());
+
+            em.merge(p);
+            return p;
+        } catch (Exception e) {
+            XPersistence.rollback();
+            throw new WebApplicationException("Error al actualizar producto: " + e.getMessage(), 500);
+        }
+    }
+
+    @DELETE
+    @Path("/productos/{id}")
+    public Response eliminarProducto(@PathParam("id") Integer id) {
+        EntityManager em = XPersistence.getManager();
+        try {
+            Producto p = em.find(Producto.class, id);
+            if (p == null) {
+                return Response.status(Response.Status.NOT_FOUND)
+                        .entity("Producto no encontrado")
+                        .build();
+            }
+
+            em.remove(p);
+            return Response.ok("Producto eliminado correctamente").build();
+        } catch (Exception e) {
+            XPersistence.rollback();
+            return Response.serverError()
+                    .entity("Error al eliminar producto: " + e.getMessage())
+                    .build();
+        }
+    }
+
+	public static class CrearCanjeProductoRequest {
+	    public Integer idCliente;
+	    public Integer idProducto;
+	}
+	
+	@POST @Path("/canjes/producto")
+	public Response crearCanje(CrearCanjeProductoRequest req) {
+	  if (req == null || req.idCliente == null || req.idProducto == null)
+	    throw new WebApplicationException("idCliente e idProducto son obligatorios", 400);
+
+	  EntityManager em = XPersistence.getManager();
+
+	    Object raw = em.createNativeQuery("select fn_canjear_producto(:c,:p)")
+		        .setParameter("c", req.idCliente)
+		        .setParameter("p", req.idProducto)
+		        .getSingleResult();
+
+	    if (raw == null) {
+	        throw new WebApplicationException("No se pudo crear el canje por producto", 500);
+	    }
+
+	  Integer idCab;
+	  if (raw instanceof Number) {
+	    idCab = ((Number) raw).intValue();
+	  } else {
+	    idCab = Integer.valueOf(raw.toString());
+	  }
+
+	  UsoPuntoCabeceraDTO dto = obtenerCanje(idCab);
+	  return Response.created(UriBuilder.fromPath("/canjes/{id}").build(idCab)).entity(dto).build();
+	}
+	
+    /*
+     * =========================== DASHBOARD ===========================
+     */
+
+    @GET
+    @Path("/dashboard/resumen")
+    public DashboardResumenDTO obtenerResumenDashboard() {
+        EntityManager em = XPersistence.getManager();
+        DashboardResumenDTO dto = new DashboardResumenDTO();
+
+        Object r;
+
+        // Total de clientes
+        r = em.createNativeQuery("select count(*) from cliente")
+              .getSingleResult();
+        dto.setTotalClientes(((Number) r).longValue());
+
+        // Total de bolsas de puntos (operaciones que generan puntos)
+        r = em.createNativeQuery("select count(*) from bolsapunto")
+              .getSingleResult();
+        dto.setTotalBolsas(((Number) r).longValue());
+
+        // Total de canjes
+        r = em.createNativeQuery("select count(*) from usopuntocabecera")
+              .getSingleResult();
+        dto.setTotalCanjes(((Number) r).longValue());
+
+        // Canjes de hoy
+        r = em.createNativeQuery(
+                "select count(*) from usopuntocabecera " +
+                "where fecha = current_date")
+              .getSingleResult();
+        dto.setCanjesHoy(((Number) r).longValue());
+
+        // Canjes del mes actual
+        r = em.createNativeQuery(
+        	    "select count(*) from usopuntocabecera " +
+        	    "where fecha >= date_trunc('month', current_date) " +
+        	    "  and fecha <= current_date"
+        	).getSingleResult();
+        dto.setCanjesMes(((Number) r).longValue());
+
+        // Puntos asignados
+        r = em.createNativeQuery(
+                "select coalesce(sum(puntaje_asignado), 0) from bolsapunto")
+              .getSingleResult();
+        dto.setPuntosAsignados(((Number) r).longValue());
+
+        // Puntos utilizados
+        r = em.createNativeQuery(
+                "select coalesce(sum(puntaje_utilizado), 0) from bolsapunto")
+              .getSingleResult();
+        dto.setPuntosUtilizados(((Number) r).longValue());
+
+        // Saldo total de puntos (vigentes)
+        r = em.createNativeQuery(
+                "select coalesce(sum(saldo_punto), 0) from bolsapunto")
+              .getSingleResult();
+        dto.setPuntosSaldo(((Number) r).longValue());
+
+        return dto;
+    }
 
 }

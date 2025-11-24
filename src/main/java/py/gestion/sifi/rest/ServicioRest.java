@@ -66,7 +66,7 @@ public class ServicioRest {
 	    return dto;
 	}
 	
-	private VentaDTO toDTO(Venta v) {
+	private static VentaDTO toDTO(Venta v) {
 	    VentaDTO dto = new VentaDTO();
 	    dto.setId(v.getId());
 	    dto.setClienteId(v.getCliente().getId());
@@ -78,6 +78,22 @@ public class ServicioRest {
 	    dto.setPuntosBase(v.getPuntosBase());
 	    dto.setPuntosPromo(v.getPuntosPromo());
 	    dto.setPuntosTotales(v.getPuntosTotales());
+	    return dto;
+	}
+
+	private static ReferirClienteDTO toReferirClienteDTO(ReferirCliente r, LocalDate fechaFin) {
+
+	    ReferirClienteDTO dto = new ReferirClienteDTO();
+	    dto.setId(r.getId());
+	    dto.setCliente(toDTO(r.getCliente()));
+	    dto.setReferido(toDTO(r.getReferido()));
+	    dto.setFechaRegistro(r.getFechaRegistro().toString());
+	    dto.setPuntosObtenidos(r.getPuntosObtenidos());
+
+	    dto.setFechaVencimientoPuntos(
+	        fechaFin != null ? fechaFin.toString() : null
+	    );
+
 	    return dto;
 	}
 
@@ -745,21 +761,56 @@ public class ServicioRest {
 	 * =========================== Referir Cliente ===========================
 	 */
 	
+	@GET
+	@Path("/referidos/listar")
+	public List<ReferirClienteDTO> listarReferidos() {
+
+	    EntityManager em = XPersistence.getManager();
+
+	    List<ReferirCliente> lista = em.createQuery(
+	        "SELECT r FROM ReferirCliente r ORDER BY r.fechaRegistro DESC",
+	        ReferirCliente.class
+	    ).getResultList();
+
+	    List<ReferirClienteDTO> salida = new ArrayList<>();
+	    for (ReferirCliente r : lista) {
+	        // obtener fecha de vencimiento
+	        LocalDate fechaFin = null;
+	        try {
+	            fechaFin = em.createQuery(
+	                    "SELECT bp.vencimientoPunto.fechaFin " +
+	                    "FROM BolsaPunto bp " +
+	                    "WHERE bp.cliente.id = :id AND bp.puntajeAsignado = :puntos " +
+	                    "AND bp.vencimientoPunto.fechaInicio = :inicio",
+	                    LocalDate.class)
+	                .setParameter("id", r.getCliente().getId())
+	                .setParameter("puntos", r.getPuntosObtenidos())
+	                .setParameter("inicio", r.getFechaRegistro())
+	                .setMaxResults(1)
+	                .getSingleResult();
+
+	        } catch (Exception ex) {
+	            // puede no encontrar puntos (no rompe)
+	        }
+	        salida.add(toReferirClienteDTO(r, fechaFin));
+	    }
+
+	    return salida;
+	}
+
 	@POST
 	@Path("/referirCliente")
 	public ReferirClienteDTO crearReferido(ReferirCliente r) {
+
 	    EntityManager em = XPersistence.getManager();
 
-	    // Buscar cliente que refiere
 	    Cliente cliente = em.find(Cliente.class, r.getCliente().getId());
 	    if (cliente == null) {
 	        throw new WebApplicationException("Cliente que refiere no encontrado", 404);
 	    }
 
-	    // Crear nuevo cliente (referido)
 	    Cliente nuevoReferido = new Cliente();
-	    Cliente refData = r.getReferido(); // datos enviados en JSON
-
+	    Cliente refData = r.getReferido();
 	    nuevoReferido.setNombre(refData.getNombre());
 	    nuevoReferido.setApellido(refData.getApellido());
 	    nuevoReferido.setNumeroDocumento(refData.getNumeroDocumento());
@@ -768,35 +819,33 @@ public class ServicioRest {
 	    nuevoReferido.setEmail(refData.getEmail());
 	    nuevoReferido.setCelular(refData.getCelular());
 	    nuevoReferido.setFechaNacimiento(refData.getFechaNacimiento());
-	    //nuevoReferido.setPuntosAcumulados(0); // inicia con 0
 
 	    em.persist(nuevoReferido);
 
-	    // Crear vencimiento de puntos
-	    VencimientoPunto vp = new VencimientoPunto();
-	    vp.setFechaInicio(LocalDate.now());
-	    vp.setDiasValidez(r.getVencimientoPunto().getDiasValidez());
-	    vp.setFechaFin(LocalDate.now().plusDays(vp.getDiasValidez()));
-	    em.persist(vp);
-
-	    // Crear registro de referido
 	    ReferirCliente registro = new ReferirCliente();
 	    registro.setCliente(cliente);
 	    registro.setReferido(nuevoReferido);
-	    registro.setVencimientoPunto(vp);
 	    registro.setFechaRegistro(LocalDate.now());
 	    registro.setPuntosObtenidos(100);
+
 	    em.persist(registro);
 
-	    // DTO de respuesta
 	    ReferirClienteDTO dto = new ReferirClienteDTO();
-	    dto.setIdReferido(nuevoReferido.getId());
-	    dto.setNombreCompletoReferido(nuevoReferido.getNombre() + " " + nuevoReferido.getApellido());
+
+	    // Datos del cliente que refiere
+	    dto.setCliente(toDTO(cliente));
+
+	    // Datos del cliente nuevo (referido)
+	    dto.setReferido(toDTO(nuevoReferido));
+
+	    // Datos del registro
+	    dto.setFechaRegistro(registro.getFechaRegistro().toString());
 	    dto.setPuntosObtenidos(registro.getPuntosObtenidos());
-	    dto.setFechaVencimientoPuntos(vp.getFechaFin());
+	    dto.setFechaVencimientoPuntos(registro.getFechaRegistro().plusDays(30).toString());
 
 	    return dto;
 	}
+
 	
 	/*
 	 * =========================== Promociones ===========================
@@ -843,31 +892,23 @@ public class ServicioRest {
 	    if (inicioStr != null && !inicioStr.isEmpty()) {
 	        inicio = LocalDate.parse(inicioStr);
 	    }
-
 	    if (finStr != null && !finStr.isEmpty()) {
 	        fin = LocalDate.parse(finStr);
 	    }
-
 	    String jpql = "SELECT v FROM Venta v WHERE 1=1";
-
 	    if (inicio != null) {
 	        jpql += " AND v.fecha >= :inicio";
 	    }
-
 	    if (fin != null) {
 	        jpql += " AND v.fecha <= :fin";
 	    }
-
 	    TypedQuery<Venta> query = em.createQuery(jpql, Venta.class);
-
 	    if (inicio != null) {
 	        query.setParameter("inicio", inicio);
 	    }
-
 	    if (fin != null) {
 	        query.setParameter("fin", fin);
 	    }
-
 	    List<Venta> ventas = query.getResultList();
 
 	    // Convertimos a DTO

@@ -15,7 +15,7 @@ import py.gestion.sifi.validador.*;
 @View(name = "simple",members = "cliente[#id, nombre, apellido, numeroDocumento;]")
 @View(members = "datos[#nombre, apellido, nacionalidad;"
 		+ "tipoDocumento, numeroDocumento, fechaNacimiento;"
-		+ "celular, email, puntosAcumulados;]")
+		+ "celular, email; puntosAcumulados, saldoPuntos;]")
 @Entity @Getter @Setter
 @Table(
   name = "cliente",
@@ -77,5 +77,9 @@ public class Cliente {
 	@ReadOnly
 	@Column(name = "puntos_acumulados", columnDefinition = "integer")
 	private Integer puntosAcumulados;
+	
+	@ReadOnly
+	@Column(name = "saldo_puntos", columnDefinition = "integer")
+	private Integer saldoPuntos;
 
 }

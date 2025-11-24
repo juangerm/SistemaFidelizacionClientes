@@ -32,26 +32,37 @@ public class CalcularPuntosAcumuladosAccion extends OnChangePropertyBaseAction {
         Integer puntosAcumulados = ((Number) q.getSingleResult()).intValue();
         System.out.println("puntosAcumulados " + puntosAcumulados);
         
-        Query o = em.createQuery(
-        		"SELECT COALESCE(sum(b.puntosObtenidos),0) FROM ReferirCliente b "
+        //comenado porque ya se carga en bolsa de puntos automaticamente y se obtiene todo en el query de bolsa de punto
+//        Query o = em.createQuery(
+//        		"SELECT COALESCE(sum(b.puntosObtenidos),0) FROM ReferirCliente b "
+//        			+ " JOIN b.vencimientoPunto vp " 
+//            		+ " WHERE (b.cliente.id = :idCliente OR b.referido.id = :idCliente) "
+//            		+ " AND vp.fechaFin >= :hoy ");
+//
+//        o.setParameter("idCliente", idCliente);
+//        o.setParameter("hoy", hoy);
+//
+//        Integer puntosObtenidos = ((Number) o.getSingleResult()).intValue();
+//        System.out.println("puntosObtenidos " + puntosObtenidos);
+        
+       // Integer total = puntosAcumulados + puntosObtenidos;
+        
+        System.out.println("puntos " + puntosAcumulados);
+        //getView().setValue("puntosAcumulados", total);
+        getView().setValue("puntosAcumulados", puntosAcumulados);
+        
+        Query s = em.createQuery(
+        		"SELECT COALESCE(sum(b.saldoPunto),0) FROM BolsaPunto b "
         			+ " JOIN b.vencimientoPunto vp " 
-            		+ " WHERE (b.cliente.id = :idCliente OR b.referido.id = :idCliente) "
+            		+ " WHERE b.cliente.id = :idCliente "
             		+ " AND vp.fechaFin >= :hoy ");
 
-        o.setParameter("idCliente", idCliente);
-        o.setParameter("hoy", hoy);
+        s.setParameter("idCliente", idCliente);
+        s.setParameter("hoy", hoy);
 
-        Integer puntosObtenidos = ((Number) o.getSingleResult()).intValue();
-        System.out.println("puntosObtenidos " + puntosObtenidos);
-        
-        Integer total = puntosAcumulados + puntosObtenidos;
-        
-        System.out.println("puntos " + total);
-        getView().setValue("puntosAcumulados", total);
-        //cliente.setPuntosAcumulados(puntos);
-//        System.out.println("total "+puntos);
-//        em.merge(cliente);
-//        em.flush();
-//        getView().setValue("cliente.puntosAcumulados", puntos);
+        Integer saldoPuntos = ((Number) s.getSingleResult()).intValue();
+        System.out.println("saldo puntos " + saldoPuntos);
+        getView().setValue("saldoPuntos", saldoPuntos);
+       
     }
 }

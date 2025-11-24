@@ -51,7 +51,7 @@
 			
         	<property name="hibernate.connection.url" value="jdbc:postgresql://localhost:5432/sifidb"/>
         	<property name="hibernate.connection.username" value="postgres"/>
-			<property name="hibernate.connection.password" value="12345"/>
+			<property name="hibernate.connection.password" value="123"/>
 			
 			<!--<property name="hibernate.show_sql" value="true"/>-->
         </properties>

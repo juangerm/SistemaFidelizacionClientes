@@ -5,7 +5,7 @@
 		"description": "Base path: {{baseUrl}}",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "49771323",
-		"_collection_link": "https://juangerm78-7160166.postman.co/workspace/7d65cfd5-1798-49f9-84f8-6047185ad6e9/collection/49771323-9083125a-6475-41aa-a32a-0bdc82839d25?action=share&source=collection_link&creator=49771323"
+		"_collection_link": "https://juangerm78-7160166.postman.co/workspace/Juan-Benitez's-Workspace~7d65cfd5-1798-49f9-84f8-6047185ad6e9/collection/49771323-9083125a-6475-41aa-a32a-0bdc82839d25?action=share&source=collection_link&creator=49771323"
 	},
 	"item": [
 		{
@@ -112,6 +112,84 @@
 							"path": [
 								"clientes",
 								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Segmentacion de clientes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/clientes/segmento",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"clientes",
+								"segmento"
+							],
+							"query": [
+								{
+									"key": "edadMin",
+									"value": "20",
+									"disabled": true
+								},
+								{
+									"key": "edadMax",
+									"value": "30",
+									"disabled": true
+								},
+								{
+									"key": "pais",
+									"value": "paraguay",
+									"disabled": true
+								},
+								{
+									"key": "comprasMin",
+									"value": "2",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Nivel",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/clientes/1/nivel",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"clientes",
+								"1",
+								"nivel"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Saldo del Cliente",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/clientes/1/saldo",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"clientes",
+								"1",
+								"saldo"
 							]
 						}
 					},
@@ -679,8 +757,224 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Listar Canjes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/canjes",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"canjes"
+							]
+						}
+					},
+					"response": []
 				}
 			]
+		},
+		{
+			"name": "Referido",
+			"item": [
+				{
+					"name": "ReferirCliente",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"cliente\": { \"id\": 2 },\r\n  \"referido\": {\r\n    \"nombre\": \"Ana\",\r\n    \"apellido\": \"Gómez\",\r\n    \"numeroDocumento\": \"98765432\",\r\n    \"tipoDocumento\": { \"codTipoDocumento\": 1 },\r\n    \"nacionalidad\": { \"codNacionalidad\": 1 },\r\n    \"email\": \"ana.gomez@email.com\",\r\n    \"celular\": \"0987654321\",\r\n    \"fechaNacimiento\": \"1980-08-12\"\r\n  },\r\n  \"vencimientoPunto\": {\r\n    \"diasValidez\": 60\r\n  }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/referirCliente",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"referirCliente"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Productos",
+			"item": [
+				{
+					"name": "Listar Productos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/productos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"productos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Crear Producto",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"PRODUCTO PREMIUM\",\n  \"descripcion\": \"Acceso premium a servicio X\",\n  \"puntosRequeridos\": 50,\n  \"precioReferencia\": 150000,\n  \"activo\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/productos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"productos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar Producto",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"PRODUCTO PREMIUM EDITADO\",\n  \"descripcion\": \"Edición del producto\",\n  \"puntosRequeridos\": 60,\n  \"precioReferencia\": 180000,\n  \"activo\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/productos/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"productos",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar Producto",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/productos/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"productos",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Canjear Producto por Puntos",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"idCliente\": 1,\n  \"idProducto\": 3\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/canjes/producto",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"canjes",
+								"producto"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Dashboard",
+			"item": [
+				{
+					"name": "Dashboard - Resumen",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/dashboard/resumen",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"dashboard",
+								"resumen"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
 		}
 	],
 	"variable": [

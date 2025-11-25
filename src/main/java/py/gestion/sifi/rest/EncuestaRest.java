@@ -1,6 +1,7 @@
 package py.gestion.sifi.rest;
 
 import java.util.*;
+import java.util.stream.*;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
@@ -60,7 +61,7 @@ public class EncuestaRest {
         // Convertir las entidades a DTOs
         var dtoList = list.stream()
                 .map(this::toDTO)
-                .toList();
+                .collect(Collectors.toList());
 
         return Response.ok(dtoList).build();
     }

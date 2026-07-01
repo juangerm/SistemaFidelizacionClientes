@@ -117,9 +117,8 @@ En la carpeta `/db` se incluyen los scripts:
 
 ---
 
-## Autores 
-**Juan Gerardo Benitez Romero**  
-**Nicolás Ayala Pizurno**  
+## Autor 
+**Juan Gerardo Benitez Romero**    
 
 
 ## Licencia

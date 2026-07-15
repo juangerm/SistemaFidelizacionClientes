@@ -105,6 +105,41 @@ VALUES
 -- ==========================
 SELECT fn_usar_puntos(1, 1, NULL);
 
+-- ==========================
+-- 8) Respuestas de Encuestas
+-- ==========================
+INSERT INTO public.respuestaencuesta (id, calificacion, descripcion)
+    OVERRIDING SYSTEM VALUE
+VALUES
+    (1, 5, 'EXCELENTE'),
+    (2, 4, 'MUY BUENO'),
+    (3, 3, 'BUENO'),
+    (4, 2, 'REGULAR'),
+    (5, 1, 'MALO')
+    ON CONFLICT (id) DO NOTHING;
+
+-- ==========================
+-- 9) Niveles de Fidelizacion
+-- ==========================
+INSERT INTO public.nivelfidelizacion (id, beneficios, descipcion, punto_maximo, punto_minimo)
+    OVERRIDING SYSTEM VALUE
+VALUES
+    (1, 'PUNTOS ADICIONALES (2 PUNTOS)', 'BRONZE',300,100),
+    (2, 'DESCUENTO 15%', 'PLATA',800,301),
+    (3, 'DESCUENTO 35%', 'ORO',NULL,801)
+    ON CONFLICT (id) DO NOTHING;
+
+-- ==========================
+-- 10) PRODUCTOS
+-- ==========================
+INSERT INTO public.producto (id, activo, descripcion, nombre, precio_referencia, puntos_requeridos)
+    OVERRIDING SYSTEM VALUE
+VALUES
+    (1, TRUE, NULL, 'TERMO FORRADO 1LTS',100000, 30),
+    (2, TRUE, NULL, 'TERMO FORRADO 1,5LTS',150000, 80),
+    (3, TRUE, NULL, 'BOLIGRAFO',15000, 5)
+    ON CONFLICT (id) DO NOTHING;
+
 COMMIT;
 
 -- ==========================

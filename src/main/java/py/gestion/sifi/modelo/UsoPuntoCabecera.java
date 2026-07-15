@@ -18,7 +18,7 @@ import py.gestion.sifi.alCambiar.*;
 @View(name="simple", members="id")
 @View(members=
   "cliente; " +
-  "datos[#fecha, conceptoPunto, puntajeUtilizado;]; " +
+  "datos[#fecha, conceptoPunto, producto, puntajeUtilizado;]; " +
   "detalle"  // se mostrará solo-lectura
 )
 public class UsoPuntoCabecera {
@@ -51,6 +51,14 @@ public class UsoPuntoCabecera {
   @DescriptionsList(descriptionProperties = "concepto")
   @Required @NoModify @NoCreate @NoFrame
   private ConceptoPunto conceptoPunto;
+
+  @ReferenceView("simple")
+  @ManyToOne(fetch = FetchType.LAZY, optional = true)
+  @JoinColumn(name = "idproducto", columnDefinition = "integer",
+          foreignKey = @ForeignKey(name = "fk_usopuntocabecera_producto"))
+  @DescriptionsList(descriptionProperties = "nombre")
+  @Required @NoModify @NoCreate @NoFrame
+  private Producto producto;
 
   /** 
    * IMPORTANTE: El detalle se genera en BD por fn_usar_puntos().

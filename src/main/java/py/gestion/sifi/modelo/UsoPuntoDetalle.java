@@ -29,4 +29,7 @@ public class UsoPuntoDetalle {
               foreignKey=@ForeignKey(name="fk_usopuntodetalle_idbolsapunto"))
   @NoCreate @NoModify @NoFrame
   private BolsaPunto bolsaPunto;
+
+  @Column(name = "puntos_consumidos", columnDefinition = "integer")
+  private Integer puntoConsumido;
 }

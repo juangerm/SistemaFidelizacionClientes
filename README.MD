@@ -84,7 +84,8 @@ El archivo `src/main/resources/META-INF/persistence.xml` define la conexión a P
 	2.7. Click derecho encima de src/main/java --> "Run As.." --> Java Application
 	2.8. Se realiza la compilación y ejecución del servicio REST+Frontend.
     2.9. Iniciar sesion con el usuario "admin" y contraseña "admin"
-    2.10. Una vez iniciado sesion como admin ejecutar el script "sifi_db_init.sql" en la base de datos.
+    2.10. Una vez iniciado sesion como admin ejecutar el script "sifi_db_init.sql" en la base de datos para la creacion de funciones y triggers.
+    2.11. Ejecutar el script "sifi_seed.sql" en la base de datos para la creacion de registros de ejemplos y catalogos.
 ---
 
 Abre tu navegador en

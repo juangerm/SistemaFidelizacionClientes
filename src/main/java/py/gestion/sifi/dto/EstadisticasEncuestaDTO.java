@@ -2,6 +2,8 @@ package py.gestion.sifi.dto;
 
 import java.util.*;
 
+import lombok.*;
+@Getter @Setter
 public class EstadisticasEncuestaDTO {
 
     public long totalEncuestas;
@@ -11,5 +13,13 @@ public class EstadisticasEncuestaDTO {
     public Map<String, Long> respuestasP3;
     public Map<String, Long> respuestasP4;
     public Map<String, Long> respuestasP5;
+	
+	private String pregunta;
+
+	private Double promedio;
+	
+	private Integer totalRespuestas;
+
+	private Map<String, Long> respuestas;
 
 }

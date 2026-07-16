@@ -1,7 +1,11 @@
 package py.gestion.sifi.dto;
 
 import java.time.*;
+import java.util.*;
 
+import lombok.*;
+
+@Getter @Setter
 public class EncuestasDTO {
 	
     public Integer id;
@@ -22,5 +26,9 @@ public class EncuestasDTO {
 
     public String pregunta5;
     public Integer respuesta5;
+	
+	private Long totalEncuestas;
+
+	private List<EstadisticasEncuestaDTO> preguntas;
 }
 

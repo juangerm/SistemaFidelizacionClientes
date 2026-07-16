@@ -10,9 +10,9 @@ import org.openxava.jpa.*;
 
 import py.gestion.sifi.dto.*;
 import py.gestion.sifi.modelo.*;
-@Path("/api")
+/*@Path("/api")
 @Consumes(MediaType.APPLICATION_JSON)
-@Produces(MediaType.APPLICATION_JSON)
+@Produces(MediaType.APPLICATION_JSON)*/
 public class EncuestaRest {
 	
 	/*
@@ -75,6 +75,16 @@ public class EncuestaRest {
 	    // Total de encuestas
 	    Long total = em.createQuery("SELECT COUNT(e) FROM Encuesta e", Long.class)
 	            .getSingleResult();
+	    
+	    if (total == 0) {
+
+	        Map<String, Object> result = new LinkedHashMap<>();
+	        result.put("totalEncuestas", 0);
+	        result.put("promedioGeneral", 0);
+	        result.put("preguntas", Collections.emptyList());
+
+	        return Response.ok(result).build();
+	    }
 	    
 	    // Promedio general (de todos los puntajes de las respuestas)
 	    Double promedio = em.createQuery(
